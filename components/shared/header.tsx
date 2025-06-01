@@ -9,39 +9,38 @@ interface Props {
     className?: string;
 }
 
-export const Header: React.FC<Props> = ({ className}) => {
+export const Header: React.FC<Props> = ({ className }) => {
     return (
         <header className={cn('border border-b', className)}>
-            <Container className='flex items-center justify-between py-8'>
-                {/* {Левая часть} */}
-                <div className='flex items-center gap-4'>
-                    <Image src="/logo.jpg" alt="Logo" width={35} height={35}/>
-                    <div>
-                        <h1 className="text-2xl uppercase font-black">Лидер Продукт</h1>
-                        <p className="text-sm text-gray-400 leading-3">быстрая доставка продуктов</p>
+            <Container className='flex items-center justify-between py-8 w-full'>
+                {/* Левая часть */}
+                <div className='flex items-center gap-4 flex-shrink-0'>
+                    <Image src="/logo.jpg" alt="Logo" width={35} height={35} className='flex-shrink-0'/>
+                    <div className='flex-shrink-0'>
+                        <h1 style={{color: "#9ac42c"}} className="text-2xl uppercase font-black whitespace-nowrap">Лидер Продукт</h1>
+                        <p style={{color: "#EE960A"}} className="text-sm leading-3 whitespace-nowrap">быстрая доставка продуктов</p>
                     </div>
                 </div>
-                {/* {Правая часть} */}
-                <div className='flex items-center gap-3'>
-                    <Button variant="outline" className='flex items-center gap-1'>
-                        <User size={16}></User>
+
+                {/* Правая часть */}
+                <div className='flex items-center gap-3 flex-shrink-0'>
+                    <Button variant="outline" className='flex items-center gap-1 whitespace-nowrap'>
+                        <User size={16}/>
                         Войти
                     </Button>
 
-                    <div>
-                        <Button className='group relative'>
-                            <b>520 Р</b>
-                            <span className='h-full w-[1px] bg-white/30 mx-3'/>
-                            <div className="flex items-center gap-1 translition duration-300 group-hover:opacity-0">
-                                <ShoppingCart size={16} className='relative' strokeWidth={2}/>
-                                <b>3</b>
-                            </div>
-                            <ArrowRight size={20} className='absolute right-5 transition duration-300 -translate-x-2 opacity-0 group-hover:opacity-100 group-hover:translate-x-0'/>
-                        </Button>
-
-
-                    </div>
+                    <Button className='group relative flex items-center whitespace-nowrap'>
+                        <b>520 Р</b>
+                        <span className='h-full w-[1px] bg-white/30 mx-3'/>
+                        <div className="flex items-center gap-1 transition duration-300 group-hover:opacity-0">
+                            <ShoppingCart size={16} strokeWidth={2}/>
+                            <b>3</b>
+                        </div>
+                        <ArrowRight size={20} className='absolute right-5 transition duration-300 -translate-x-2 opacity-0 group-hover:opacity-100 group-hover:translate-x-0'/>
+                    </Button>
                 </div>
+
+
             </Container>
         </header>
     )
