@@ -1,0 +1,195 @@
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "sqlserver"
+    url = env("DATABASE_URL")
+}
+
+model User {
+    id Int @id @default(autoincrement())
+    fullName String
+    email String
+    password String
+    role String @default("USER")
+    
+    orders Order[]
+    reviews Review[]
+    cart Cart?
+    addresses Address[]
+    
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model Product {
+    id Int @id @default(autoincrement())
+    name String
+    description String
+    price Float
+    discountPrice Float?
+    stock Int @default(0)
+    imagesJson String
+    isActive Boolean @default(true)
+    
+    categoryId Int
+    category Category @relation(fields: [categoryId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+    
+    orderItems OrderItem[]
+    cartItems CartItem[]
+    reviews Review[]
+    
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model Category {
+    id Int @id @default(autoincrement())
+    name String
+    slug String @unique
+    description String?
+    image String?
+    
+    parentId Int?
+    parent Category? @relation("CategoryToSubcategory", fields: [parentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+    subcategories Category[] @relation("CategoryToSubcategory")
+    
+    products Product[]
+    
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model Order {
+    id Int @id @default(autoincrement())
+    orderNumber String @unique
+    status String @default("PENDING")
+    totalAmount Float
+    
+    userId Int
+    user User @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+    
+    addressId Int
+    address Address @relation(fields: [addressId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+    
+    items OrderItem[]
+    payment Payment?
+    
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model OrderItem {
+    id Int @id @default(autoincrement())
+    quantity Int
+    price Float
+    
+    orderId Int
+    order Order @relation(fields: [orderId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+    
+    productId Int
+    product Product @relation(fields: [productId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+    
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model Review {
+    id Int @id @default(autoincrement())
+    rating Int
+    comment String?
+    
+    userId Int
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+    
+    productId Int
+    product Product @relation(fields: [productId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+    
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model Cart {
+    id Int @id @default(autoincrement())
+    
+    userId Int @unique
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+    
+    items CartItem[]
+    
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model CartItem {
+    id Int @id @default(autoincrement())
+    quantity Int
+    
+    cartId Int
+    cart Cart @relation(fields: [cartId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+    
+    productId Int
+    product Product @relation(fields: [productId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+    
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model Address {
+    id Int @id @default(autoincrement())
+    street String
+    city String
+    state String
+    postalCode String
+    country String
+    isDefault Boolean @default(false)
+    
+    userId Int
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+    
+    orders Order[]
+    
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model Payment {
+    id Int @id @default(autoincrement())
+    amount Float
+    paymentMethod String
+    status String @default("PENDING")
+    transactionId String?
+    
+    orderId Int @unique
+    order Order @relation(fields: [orderId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+    
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+// Комментарии для справки о возможных значениях строковых полей, заменяющих enum
+
+// Возможные значения для User.role:
+// - "USER"
+// - "ADMIN"
+
+// Возможные значения для Order.status:
+// - "PENDING"
+// - "PROCESSING"
+// - "SHIPPED"
+// - "DELIVERED"
+// - "CANCELLED"
+
+// Возможные значения для Payment.paymentMethod:
+// - "CREDIT_CARD"
+// - "DEBIT_CARD"
+// - "PAYPAL"
+// - "BANK_TRANSFER"
+// - "CASH_ON_DELIVERY"
+
+// Возможные значения для Payment.status:
+// - "PENDING"
+// - "COMPLETED"
+// - "FAILED"
+// - "REFUNDED"

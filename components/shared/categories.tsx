@@ -36,18 +36,25 @@ export const Categories: React.FC<Props> = ({ className}) => {
                     key={index}
                     className={cn(
                         'flex items-center font-bold h-11 rounded-2xl px-5 cursor-pointer',
-                        'transition-all duration-200 ease-in-out', // Анимация изменений
-                        'hover:scale-[1.02] hover:shadow-lg', // Увеличение и тень при наведении
-                        'active:scale-95', // Эффект нажатия
+                        'transition-all duration-200 ease-in-out',
+                        'hover:scale-[1.02] hover:shadow-lg',
+                        'active:scale-95',
                         categoryActiveId === id && 'bg-white shadow-md shadow-gray-400 text-primary'
                     )}
                     onClick={() => {
                         const element = document.getElementById(name);
-                        if (element) element.scrollIntoView({ behavior: 'smooth' });
+                        if (element) {
+                            const offset = 130; // Желаемый отступ сверху (в пикселях)
+                            const elementPosition = element.getBoundingClientRect().top + window.scrollY;
+                            window.scrollTo({
+                                top: elementPosition - offset,
+                                behavior: 'smooth'
+                            });
+                        }
                     }}
-                    >
+                >
                     {name}
-                </Button>             
+                </Button>
             ))}
         </div>
     )

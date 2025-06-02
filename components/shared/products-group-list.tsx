@@ -25,7 +25,7 @@ export const ProductsGroupList: React.FC<Props> = ({
     const setActiveCategoryId = useCategoryStore((state) => state.setActiveId)
 
     const [ref, inView] = useInView({
-        threshold: 0.4,
+        threshold: 0.1,
         triggerOnce: false // Опционально: срабатывает только один раз
     });
     
