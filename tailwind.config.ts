@@ -5,7 +5,7 @@ const config = {
     './pages/**/*.{ts,tsx}',
     './shared/components/**/*.{ts,tsx}',
     './app/**/*.{ts,tsx}',
-    './src/**/*.{ts,tsx}',
+    './src/**/*.{ts,tsx, jsx, js}',
   ],
   prefix: '',
   theme: {
@@ -50,6 +50,9 @@ const config = {
         card: {
           DEFAULT: 'hsl(var(--card))',
           foreground: 'hsl(var(--card-foreground))',
+        },
+        extend: {
+          scrollBehavior: ['smooth'], // Добавляем поддержку плавной прокрутки
         },
       },
       borderRadius: {
