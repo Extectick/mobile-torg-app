@@ -9,27 +9,78 @@ datasource db {
 }
 
 model User {
-    id Int @id @default(autoincrement())
-    fullName String
-    email String @unique
-    password String
-    role String @default("USER")
-    
-    verified DateTime?
+  id          Int       @id @default(autoincrement())
+  email       String    @unique
+  phone       String?
+  password    String
+  role        String    @default("USER")  // USER, LEGAL, EMPLOYEE, ADMIN...
+  type        String    @default("INDIVIDUAL")
 
-    orders Order[]
-    reviews Review[]
-    cart Cart?
-    addresses Address[]
-    
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+  // Связи с профилями (в зависимости от типа)
+  individualProfile IndividualProfile?
+  legalProfile      LegalProfile[]
+  employeeProfile   EmployeeProfile?
+
+  // Общие поля
+  verified    DateTime?
+  orders      Order[]
+  reviews     Review[]
+  cart        Cart?
+  addresses   Address[]
+  GUID        String? // Для 1С
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// Профиль физ. лица
+model IndividualProfile {
+  id        Int     @id @default(autoincrement())
+  GUID      String? // Для 1С
+  fullName  String
+  passport  String?
+  user      User    @relation(fields: [userId], references: [id])
+  userId    Int     @unique  // 1:1 связь
+}
+
+// Профиль юр. лица
+model LegalProfile {
+  id             Int     @id @default(autoincrement())
+  GUID           String? // Для 1С
+  companyName    String
+  inn            String  // ИНН
+  kpp            String? // КПП
+  legalAddress   String
+  user           User    @relation(fields: [userId], references: [id])
+  userId         Int     @unique
+}
+
+// Профиль сотрудника
+model EmployeeProfile {
+  id           Int     @id @default(autoincrement())
+  GUID         String? // Для 1С
+  fullName     String
+  position     String
+  department   Department @relation(fields: [departmentId], references: [id])
+  departmentId Int
+  user         User    @relation(fields: [userId], references: [id])
+  userId       Int     @unique
+}
+
+// Отделы
+model Department {
+  id          Int               @id @default(autoincrement())
+  name        String
+  code        String?           // Код отдела (опционально)
+  description String?
+  employees   EmployeeProfile[]
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
 }
 
 model Product {
     id Int @id @default(autoincrement())
     name String
-    description String
+    description String?
     price Float
     discountPrice Float?
     stock Int @default(0)
@@ -39,11 +90,15 @@ model Product {
     categoryId Int
     category Category @relation(fields: [categoryId], references: [id], onDelete: NoAction, onUpdate: NoAction)
     
-    orderItems OrderItem[]
-    cartItems CartItem[]
-    reviews Review[]
     properties ProductProperty[]
+
+    orderItems OrderItem[] // Для аналитики - посмотреть в каких заказах этот товар
+    cartItems CartItem[] // Для аналитики - посмотреть в каких корзинах этот товар
+    reviews Review[] // Для аналитики - отзывы о товаре
     
+    // Для 1С
+    GUID String?
+
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 }
@@ -56,6 +111,9 @@ model ProductProperty {
     productId Int
     product Product @relation(fields: [productId], references: [id], onDelete: Cascade, onUpdate: Cascade)
     
+    // Для 1С
+    GUID String?
+
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 }
@@ -63,7 +121,7 @@ model ProductProperty {
 model Category {
     id Int @id @default(autoincrement())
     name String
-    slug String @unique
+    //slug String @unique // url категории на сайте
     description String?
     image String?
     
@@ -73,6 +131,10 @@ model Category {
     
     products Product[]
     
+
+    // Для 1С
+    GUID String?
+
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 }
@@ -92,6 +154,9 @@ model Order {
     items OrderItem[]
     payment Payment?
     
+    // Для 1С
+    GUID String?
+
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 }
@@ -132,6 +197,8 @@ model Cart {
     userId Int @unique
     user User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
     
+    token String @unique // cookie для корзины
+
     items CartItem[]
     
     createdAt DateTime @default(now())
@@ -166,6 +233,9 @@ model Address {
     
     orders Order[]
     
+    // Для 1С
+    GUID String?
+
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 }
@@ -180,6 +250,9 @@ model Payment {
     orderId Int @unique
     order Order @relation(fields: [orderId], references: [id], onDelete: Cascade, onUpdate: Cascade)
     
+    // Для 1С
+    GUID String?
+
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 }

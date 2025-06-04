@@ -24,7 +24,7 @@ export const Categories: React.FC<Props> = ({ className}) => {
     const categoryActiveId = useCategoryStore((state) => state.activeId)
     const setStyle = {
         "background": "#f7f6f6",
-        "box-shadow": "0 2px 4px rgba(0, 0, 0, 0.05)",
+        "boxShadow": "0 2px 4px rgba(0, 0, 0, 0.05)",
     }
 
     return (
