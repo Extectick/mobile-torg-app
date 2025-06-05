@@ -10,7 +10,7 @@ interface Props {
 export const SortPopup: React.FC<Props> = ({ className }) => {
     const setStyle = {
         "background": "#f7f6f6",
-        "box-shadow": "0 2px 4px rgba(0, 0, 0, 0.1)",
+        "boxShadow": "0 2px 4px rgba(0, 0, 0, 0.1)",
     }
 
     return (

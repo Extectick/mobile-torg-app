@@ -1,4 +1,4 @@
-import { Product } from "@prisma/client"
+import { Category, Product } from "@prisma/client"
 import { axiosInstance } from "./instance"
 import { AxiosRequestConfig } from "axios";
 import axios from "axios"; // Импортируем axios для isCancel
@@ -9,13 +9,11 @@ interface SearchParams {
   limit?: number;
 }
 
-// Поиск продуктов
-export const search = async (
-  query: string, 
+export const getAll = async(  query: string, 
   config?: AxiosRequestConfig & { limit?: number }
-): Promise<Product[]> => {
-  try {
-    const response = await axiosInstance.get<Product[]>(ApiPoutes.SEARCH_PRODUCTS, {
+): Promise<Category[]> => {
+    try {
+    const response = await axiosInstance.get<Category[]>(ApiPoutes.CATEGORIES, {
       params: { 
         query,
         limit: config?.limit 
@@ -31,4 +29,4 @@ export const search = async (
     console.error('Search error:', error);
     throw error;
   }
-};
+}

@@ -1,13 +1,12 @@
-import { cn } from '@/lib/utils';
+'use client'
+
 import React from 'react';
-import { Container } from './container';
-import { Categories } from './categories';
-import { SortPopup } from './sort-popup';
 import { Title } from './title';
 import { FilterCheckbox } from './filtercheck-box';
 import { Input } from '../ui';
 import { RangeSlider } from './range-slider';
-import { CheckboxFiltersGroup } from './checkbox-filter-groups';
+import { CheckboxCategoryFiltersGroup } from './category-filter-groups';
+import { useFilterCategories } from '@/hooks/useFilterCategories';
 
 interface Props {
     className?: string;
@@ -15,7 +14,7 @@ interface Props {
 
 
 export const Filters: React.FC<Props> = ({ className }) => {
-    
+    const { categories } = useFilterCategories()
     return (
         <div className={className}>
             <Title text='Фильрация' size='sm' className='mb-5 font-bold'/>
@@ -36,119 +35,13 @@ export const Filters: React.FC<Props> = ({ className }) => {
 
                 <RangeSlider min={10} max={1000} step={1}></RangeSlider>
             </div>
-            
-            <CheckboxFiltersGroup
-                title='Тип продукции'
-                className='mt-5'
-                limit={6}
-                defaultItems={[
-                    {
-                        text: 'Молоко',
-                        value: '1'
-                    },
-                    {
-                        text: 'Сыр',
-                        value: '2'
-                    },
-                    {
-                        text: 'Горошек',
-                        value: '3'
-                    },
-                    {
-                        text: 'Семга',
-                        value: '4'
-                    },
-                    {
-                        text: 'Бекон',
-                        value: '5'
-                    },
-                    {
-                        text: 'Картофель',
-                        value: '6'
-                    },
-                                        {
-                        text: 'Угорь',
-                        value: '7'
-                    },
-                                        {
-                        text: 'Бекон',
-                        value: '8'
-                    },
-                    {
-                        text: 'Картофель',
-                        value: '9'
-                    },
-                                        {
-                        text: 'Угорь',
-                        value: '10'
-                    },
-                                        {
-                        text: 'Бекон',
-                        value: '11'
-                    },
-                    {
-                        text: 'Картофель',
-                        value: '12'
-                    },
-                                        {
-                        text: 'Угорь',
-                        value: '13'
-                    },
-                ]}
-                items={[
-                    {
-                        text: 'Молоко',
-                        value: '1'
-                    },
-                    {
-                        text: 'Сыр',
-                        value: '2'
-                    },
-                    {
-                        text: 'Горошек',
-                        value: '3'
-                    },
-                    {
-                        text: 'Семга',
-                        value: '4'
-                    },
-                    {
-                        text: 'Бекон',
-                        value: '5'
-                    },
-                    {
-                        text: 'Картофель',
-                        value: '6'
-                    },
-                                        {
-                        text: 'Угорь',
-                        value: '7'
-                    },
-                                        {
-                        text: 'Бекон',
-                        value: '8'
-                    },
-                    {
-                        text: 'Картофель',
-                        value: '9'
-                    },
-                                        {
-                        text: 'Угорь',
-                        value: '10'
-                    },
-                                        {
-                        text: 'Бекон',
-                        value: '11'
-                    },
-                    {
-                        text: 'Картофель',
-                        value: '12'
-                    },
-                                        {
-                        text: 'Угорь',
-                        value: '13'
-                    },
-                ]} 
+            {/* Список всех категорий товаров */}
+            <CheckboxCategoryFiltersGroup
+                title = 'Тип продукции'
+                className = 'mt-5'
+                limit = {5}
+                defaultItems = {categories.slice(0,6)}
+                items = {categories} 
             />
 
         </div>

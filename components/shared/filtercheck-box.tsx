@@ -8,6 +8,7 @@ export interface FilterCheckboxProps {
   onCheckedChange?: (checked: boolean) => void;
   checked?: boolean;
   name?: string;
+  className?: string;
 }
 
 export const FilterCheckbox: React.FC<FilterCheckboxProps> = ({
@@ -17,9 +18,10 @@ export const FilterCheckbox: React.FC<FilterCheckboxProps> = ({
   onCheckedChange,
   checked,
   name,
+  className,
 }) => {
   return (
-    <div className="flex items-center space-x-2">
+    <div className={`flex items-center space-x-2 ${className || ''}`}>
       <Checkbox
         onCheckedChange={onCheckedChange}
         checked={checked}
