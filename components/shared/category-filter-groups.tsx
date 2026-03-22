@@ -13,10 +13,15 @@ interface Props {
     items: Item[],
     defaultItems: Item[],
     limit: number,
+    //loading?: boolean,
     serchInputPlaceholder?: string,
-    onChange?: (values: string[]) => void,
+    onClickCheckBox?: (values: string[]) => void,
     defaultValue?: string[],
+    selectedIds?: Set<string>
     className?: string,
+    
+    
+     
 }
 
 export const CheckboxCategoryFiltersGroup: React.FC<Props> = (
@@ -24,10 +29,11 @@ export const CheckboxCategoryFiltersGroup: React.FC<Props> = (
         title,
         items,
         defaultItems,
-        limit,
+        limit = 5,
+        selectedIds,
         serchInputPlaceholder = 'Поиск...',
         className,
-        onChange,
+        onClickCheckBox,
         defaultValue,
     }
 ) => {
@@ -56,7 +62,8 @@ export const CheckboxCategoryFiltersGroup: React.FC<Props> = (
             : checkedValues.filter(v => v !== value);
         
         setCheckedValues(newValues);
-        onChange?.(newValues);
+        onClickCheckBox?.(newValues);
+
     };
 
     const toggleShowAll = () => {
@@ -126,14 +133,16 @@ export const CheckboxCategoryFiltersGroup: React.FC<Props> = (
                     <FilterCheckbox
                         onCheckedChange={(checked) => handleCheckboxChange(item.value, checked)}
                         checked={checkedValues.includes(item.value)}
+                        
                         key={String(item.value)}
                         value={item.value}
                         text={item.text}
                         endAdornment={item.endAdornment}
-                        // className={`hover:bg-secondary/20 px-3 py-2 rounded-md transition-colors border border-transparent hover:border-border ${item.className || ''}`}
+                        
                     />
+                    
                 ))}
-
+                
                 {items.length > limit &&(
                 <div className={showAll ? 'border-t border-t-neutral-100' : ''}>
                     <button onClick={() => setShowAll(!showAll)} className='text-primary mt-3'>
@@ -144,4 +153,5 @@ export const CheckboxCategoryFiltersGroup: React.FC<Props> = (
             </div>
         </div>
     );
+    
 };
