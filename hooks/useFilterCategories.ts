@@ -1,7 +1,6 @@
 
 
 import { Api } from "@/services/api-client"
-import { Category } from "@prisma/client"
 import { useSet } from "react-use"
 import React from "react"
 

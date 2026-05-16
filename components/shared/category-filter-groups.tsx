@@ -4,7 +4,6 @@ import React from 'react';
 import { FilterCheckbox, FilterCheckboxProps } from './filtercheck-box';
 import { Input } from '../ui';
 import { Skeleton } from '../ui/skeleton';
-import { useFilterCategories } from '@/hooks/useFilterCategories';
 
 type Item = FilterCheckboxProps;
 
@@ -13,7 +12,7 @@ interface Props {
     items: Item[],
     defaultItems: Item[],
     limit: number,
-    //loading?: boolean,
+    loading?: boolean,
     serchInputPlaceholder?: string,
     onClickCheckBox?: (values: string[]) => void,
     defaultValue?: string[],
@@ -35,14 +34,14 @@ export const CheckboxCategoryFiltersGroup: React.FC<Props> = (
         className,
         onClickCheckBox,
         defaultValue,
+        loading = false,
     }
 ) => {
-    const { loading } = useFilterCategories();
     const [showAll, setShowAll] = React.useState(false);
     const [searchValue, setSearchValue] = React.useState('');
-    const [isAnimating, setIsAnimating] = React.useState(false);
     const listRef = React.useRef<HTMLDivElement>(null);
     const [checkedValues, setCheckedValues] = React.useState<string[]>(defaultValue || []);
+    const selectedValues = selectedIds ? Array.from(selectedIds) : checkedValues;
 
     const filteredItems = items.filter((item) => 
         item.text.toLowerCase().includes(searchValue.toLocaleLowerCase())
@@ -57,31 +56,14 @@ export const CheckboxCategoryFiltersGroup: React.FC<Props> = (
     };
 
     const handleCheckboxChange = (value: string, checked: boolean) => {
+        const currentValues = selectedIds ? Array.from(selectedIds) : checkedValues;
         const newValues = checked 
-            ? [...checkedValues, value]
-            : checkedValues.filter(v => v !== value);
+            ? [...currentValues, value]
+            : currentValues.filter(v => v !== value);
         
         setCheckedValues(newValues);
         onClickCheckBox?.(newValues);
 
-    };
-
-    const toggleShowAll = () => {
-        if (showAll) {
-            if (listRef.current) {
-                listRef.current.style.maxHeight = `${listRef.current.scrollHeight}px`;
-                setTimeout(() => {
-                    if (listRef.current) {
-                        listRef.current.style.maxHeight = '0px';
-                    }
-                }, 10);
-            }
-            setTimeout(() => setShowAll(false), 300);
-        } else {
-            setShowAll(true);
-            setIsAnimating(true);
-            setTimeout(() => setIsAnimating(false), 300);
-        }
     };
 
     React.useEffect(() => {
@@ -132,7 +114,7 @@ export const CheckboxCategoryFiltersGroup: React.FC<Props> = (
                 {displayedItems.map((item) => (
                     <FilterCheckbox
                         onCheckedChange={(checked) => handleCheckboxChange(item.value, checked)}
-                        checked={checkedValues.includes(item.value)}
+                        checked={selectedValues.includes(item.value)}
                         
                         key={String(item.value)}
                         value={item.value}

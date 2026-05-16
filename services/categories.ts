@@ -1,13 +1,7 @@
-import { Category, Product } from "@prisma/client"
+import { Category } from "@prisma/client"
 import { axiosInstance } from "./instance"
-import { AxiosRequestConfig } from "axios";
 import axios from "axios"; // Импортируем axios для isCancel
 import { ApiPoutes } from "./constants";
-
-interface SearchParams {
-  query: string;
-  limit?: number;
-}
 
 export const getAll = async(): Promise<Category[]> => {
     try {

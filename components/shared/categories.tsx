@@ -7,20 +7,13 @@ import { Button } from '../ui';
 
 interface Props {
     className?: string;
+    items: Array<{
+        id: number;
+        name: string;
+    }>;
 }
 
-//const cats = ['Мясо','Молочные продукты','Сыры', 'Бакалея', 'Морепродукты', 'Овощи', 'Полуфабрикаты', 'Ягоды', 'Грибы']
-const cats = [
-  { "id": 1, "name": "Все" },
-  { "id": 2, "name": "Мясо" },
-  { "id": 3, "name": "Молочные продукты" },
-  { "id": 4, "name": "Сыры" },
-  { "id": 5, "name": "Бакалея" },
-  { "id": 6, "name": "Морепродукты" },
-  { "id": 7, "name": "Овощи" }
-]
-
-export const Categories: React.FC<Props> = ({ className}) => {
+export const Categories: React.FC<Props> = ({ className, items = []}) => {
     const categoryActiveId = useCategoryStore((state) => state.activeId)
     const setStyle = {
         "background": "#f7f6f6",
@@ -29,11 +22,11 @@ export const Categories: React.FC<Props> = ({ className}) => {
 
     return (
         <div style={setStyle} className={cn('inline-flex gap-1 bg-yellow-50 p-1 rounded-2xl', className)}> 
-            {cats.map(({name, id}, index) => (
+            {items.map(({name, id}) => (
 
                 <Button
                     variant="secondary"
-                    key={index}
+                    key={id}
                     className={cn(
                         'flex items-center font-bold h-11 rounded-2xl px-5 cursor-pointer',
                         'transition-all duration-200 ease-in-out',

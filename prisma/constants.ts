@@ -1,112 +1,238 @@
 export const categories = [
-//   { name: 'Все', slug: 'All' },
-//   { name: 'Мясо', slug: 'Myaso' },
-//   { name: 'Молочные продукты', slug: 'MilkProduct' },
-//   { name: 'Сыры', slug: 'Cheese' },
-//   { name: 'Бакалея', slug: 'Bakaleya' },
-//   { name: 'Морепродукты', slug: 'Moreproduct' },
-//   { name: 'Овощи', slug: 'Vegetebles' }
-
-  { name: 'Все'},
-  { name: 'Мясо'},
-  { name: 'Молочные продукты'},
-  { name: 'Сыры'},
-  { name: 'Бакалея'},
-  { name: 'Морепродукты'},
-  { name: 'Овощи' }
+  { name: 'Мясо', image: '/categories/meat.png' },
+  { name: 'Молочные продукты', image: '/categories/dairy.png' },
+  { name: 'Сыры', image: '/categories/cheese.png' },
+  { name: 'Бакалея', image: '/categories/grocery.png' },
+  { name: 'Морепродукты', image: '/categories/seafood.png' },
+  { name: 'Овощи', image: '/categories/vegetables.png' },
+  { name: 'Деликатесы', image: '/categories/meat-delicacies.png', parentId: 1 },
+  { name: 'Охлажденное мясо', image: '/categories/fresh-meat.png', parentId: 1 },
+  { name: 'Молоко и напитки', image: '/categories/milk-drinks.png', parentId: 2 },
+  { name: 'Завтраки', image: '/categories/dairy-breakfast.png', parentId: 2 },
+  { name: 'Крупы', image: '/categories/cereals.png', parentId: 4 },
+  { name: 'Консервы и паста', image: '/categories/pantry.png', parentId: 4 },
 ]
 
 export const products = [
-    { 
-        name: "Бекон",
-        imagesJson: "https://i.pinimg.com/originals/99/52/01/995201e1c92ca9eced42364ed8a1892c.png",
-        price: 330,
-        categoryId: 2
-    },
-    { 
-        name: "Бекон",
-        imagesJson: "https://i.pinimg.com/originals/99/52/01/995201e1c92ca9eced42364ed8a1892c.png",
-        price: 330,
-        categoryId: 2
-    },
-    { 
-
-        name: "Бекон",
-        imagesJson: "https://i.pinimg.com/originals/99/52/01/995201e1c92ca9eced42364ed8a1892c.png",
-        price: 330,
-        categoryId: 2
-    },
-    { 
-
-        name: "Бекон",
-        imagesJson: "https://i.pinimg.com/originals/99/52/01/995201e1c92ca9eced42364ed8a1892c.png",
-        price: 330,
-        categoryId: 2
-    },
-    { 
-        name: "Бекон",
-        imagesJson: "https://i.pinimg.com/originals/99/52/01/995201e1c92ca9eced42364ed8a1892c.png",
-        price: 330,
-        categoryId: 2
-    },
-    { 
-        name: "Бекон",
-        imagesJson: "https://i.pinimg.com/originals/99/52/01/995201e1c92ca9eced42364ed8a1892c.png",
-        price: 330,
-        categoryId: 2
-    },
-
-    {                 
-        name: "Горошек",
-        imagesJson: "https://ir.ozone.ru/s3/multimedia-1-q/c1000/6935375726.jpg",
-        price: 520, 
-        categoryId: 1
-    },
-    {     
-        name: "Горошек 2",
-        imagesJson: "https://ir.ozone.ru/s3/multimedia-1-q/c1000/6935375726.jpg",
-        price: 520, 
-        categoryId: 1
-    },
-    { 
-        name: "Горошек 3",
-        imagesJson: "https://ir.ozone.ru/s3/multimedia-1-q/c1000/6935375726.jpg",
-        price: 520, 
-        categoryId: 1
-    },
-    { 
-        name: "Горошек 4",
-        imagesJson: "https://ir.ozone.ru/s3/multimedia-1-q/c1000/6935375726.jpg",
-        price: 520, 
-        categoryId: 1
-    },
-] 
+  {
+    name: 'Бекон сырокопченый',
+    description: 'Мясной деликатес для завтраков, сэндвичей и горячих блюд.',
+    imagesJson: '/products/meat/bacon.png',
+    price: 330,
+    stock: 18,
+    categoryId: 7,
+  },
+  {
+    name: 'Говядина охлажденная',
+    description: 'Нежная мякоть для тушения, жарки и домашних полуфабрикатов.',
+    imagesJson: '/products/meat/beef.png',
+    price: 690,
+    stock: 12,
+    categoryId: 8,
+  },
+  {
+    name: 'Куриное филе',
+    description: 'Охлажденное филе без кожи для повседневных блюд.',
+    imagesJson: '/products/meat/chicken.png',
+    price: 360,
+    stock: 24,
+    categoryId: 8,
+  },
+  {
+    name: 'Колбаски гриль',
+    description: 'Сочные колбаски для сковороды, гриля и запекания.',
+    imagesJson: '/products/meat/sausage.png',
+    price: 420,
+    stock: 16,
+    categoryId: 7,
+  },
+  {
+    name: 'Молоко 3.2%',
+    description: 'Пастеризованное молоко для напитков, каш и выпечки.',
+    imagesJson: '/products/dairy/milk.png',
+    price: 95,
+    stock: 40,
+    categoryId: 9,
+  },
+  {
+    name: 'Кефир классический',
+    description: 'Кисломолочный напиток с мягким вкусом.',
+    imagesJson: '/products/dairy/kefir.png',
+    price: 110,
+    stock: 32,
+    categoryId: 9,
+  },
+  {
+    name: 'Масло сливочное',
+    description: 'Сливочное масло для бутербродов, соусов и выпечки.',
+    imagesJson: '/products/dairy/butter.png',
+    price: 245,
+    stock: 20,
+    categoryId: 10,
+  },
+  {
+    name: 'Йогурт натуральный',
+    description: 'Густой йогурт без лишней сладости для завтраков.',
+    imagesJson: '/products/dairy/yogurt.png',
+    price: 135,
+    stock: 28,
+    categoryId: 10,
+  },
+  {
+    name: 'Сыр Чеддер',
+    description: 'Плотный сыр с насыщенным вкусом для сэндвичей и запекания.',
+    imagesJson: '/products/cheese/cheddar.png',
+    price: 510,
+    stock: 14,
+    categoryId: 3,
+  },
+  {
+    name: 'Моцарелла',
+    description: 'Мягкий сыр для салатов, пиццы и горячих закусок.',
+    imagesJson: '/products/cheese/mozzarella.png',
+    price: 390,
+    stock: 18,
+    categoryId: 3,
+  },
+  {
+    name: 'Пармезан',
+    description: 'Твердый выдержанный сыр для пасты, салатов и соусов.',
+    imagesJson: '/products/cheese/parmesan.png',
+    price: 720,
+    stock: 10,
+    categoryId: 3,
+  },
+  {
+    name: 'Сыр Гауда',
+    description: 'Полутвердый сыр со сливочным вкусом для нарезки.',
+    imagesJson: '/products/cheese/gouda.png',
+    price: 470,
+    stock: 15,
+    categoryId: 3,
+  },
+  {
+    name: 'Горошек консервированный',
+    description: 'Зеленый горошек для салатов, гарниров и супов.',
+    imagesJson: '/products/grocery/peas.png',
+    price: 125,
+    stock: 36,
+    categoryId: 12,
+  },
+  {
+    name: 'Крупа гречневая',
+    description: 'Рассыпчатая гречка для гарниров и каш.',
+    imagesJson: '/products/grocery/buckwheat.png',
+    price: 145,
+    stock: 44,
+    categoryId: 11,
+  },
+  {
+    name: 'Макароны спирали',
+    description: 'Паста из твердых сортов пшеницы для быстрых ужинов.',
+    imagesJson: '/products/grocery/pasta.png',
+    price: 115,
+    stock: 38,
+    categoryId: 12,
+  },
+  {
+    name: 'Рис длиннозерный',
+    description: 'Универсальный рис для гарниров, плова и боулов.',
+    imagesJson: '/products/grocery/rice.png',
+    price: 155,
+    stock: 42,
+    categoryId: 11,
+  },
+  {
+    name: 'Филе лосося',
+    description: 'Красная рыба для запекания, стейков и салатов.',
+    imagesJson: '/products/seafood/salmon.png',
+    price: 890,
+    stock: 9,
+    categoryId: 5,
+  },
+  {
+    name: 'Креветки очищенные',
+    description: 'Креветки для пасты, салатов и горячих блюд.',
+    imagesJson: '/products/seafood/shrimp.png',
+    price: 760,
+    stock: 13,
+    categoryId: 5,
+  },
+  {
+    name: 'Мидии',
+    description: 'Морепродукты для супов, пасты и закусок.',
+    imagesJson: '/products/seafood/mussels.png',
+    price: 540,
+    stock: 11,
+    categoryId: 5,
+  },
+  {
+    name: 'Кальмар',
+    description: 'Нежный кальмар для салатов, жарки и тушения.',
+    imagesJson: '/products/seafood/squid.png',
+    price: 430,
+    stock: 17,
+    categoryId: 5,
+  },
+  {
+    name: 'Томаты',
+    description: 'Спелые томаты для салатов, соусов и гарниров.',
+    imagesJson: '/products/vegetables/tomato.png',
+    price: 210,
+    stock: 35,
+    categoryId: 6,
+  },
+  {
+    name: 'Огурцы',
+    description: 'Свежие огурцы для салатов и закусок.',
+    imagesJson: '/products/vegetables/cucumber.png',
+    price: 180,
+    stock: 34,
+    categoryId: 6,
+  },
+  {
+    name: 'Картофель',
+    description: 'Картофель для варки, жарки и запекания.',
+    imagesJson: '/products/vegetables/potato.png',
+    price: 75,
+    stock: 60,
+    categoryId: 6,
+  },
+  {
+    name: 'Морковь',
+    description: 'Сочная морковь для супов, салатов и гарниров.',
+    imagesJson: '/products/vegetables/carrot.png',
+    price: 85,
+    stock: 48,
+    categoryId: 6,
+  },
+]
 
 export const carts = [
-    {
-        userId: 1,
-        token: '123213'
-    },
-    {
-        userId: 2,
-        token: '123213213321321'
-    }
+  {
+    userId: 1,
+    token: '123213',
+  },
+  {
+    userId: 2,
+    token: '123213213321321',
+  },
 ]
 
 export const cartItems = [
-    {
-        cartId: 1,
-        quantity: 1,
-        productId: 2,
-    },
-    {
-        cartId: 1,
-        quantity: 3,
-        productId: 7,
-    },
-    {
-        cartId: 1,
-        quantity: 10,
-        productId: 2,
-    },
+  {
+    cartId: 1,
+    quantity: 1,
+    productId: 2,
+  },
+  {
+    cartId: 1,
+    quantity: 3,
+    productId: 7,
+  },
+  {
+    cartId: 1,
+    quantity: 10,
+    productId: 12,
+  },
 ]

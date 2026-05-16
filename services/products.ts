@@ -4,11 +4,6 @@ import { AxiosRequestConfig } from "axios";
 import axios from "axios"; // Импортируем axios для isCancel
 import { ApiPoutes } from "./constants";
 
-interface SearchParams {
-  query: string;
-  limit?: number;
-}
-
 // Поиск продуктов
 export const search = async (
   query: string, 

@@ -1,6 +1,6 @@
 import { cn } from '@/lib/utils';
 import { Container } from './container';
-import React from 'react';
+import React, { Suspense } from 'react';
 import Image from 'next/image';
 import { Button } from '../ui';
 import { ArrowRight, ShoppingCart, User } from 'lucide-react';
@@ -14,11 +14,11 @@ interface Props {
 export const Header: React.FC<Props> = ({ className }) => {
     return (
         <header className={cn('border border-b', className)}>
-            <Container className='flex items-center justify-between py-8 w-full'>
+            <Container className='flex w-full flex-wrap items-center justify-between gap-4 py-4 md:flex-nowrap md:py-8'>
                 {/* Левая часть - теперь кликабельная */}
                 <Link 
                     href="/" 
-                    className='flex items-center gap-4 flex-shrink-0 group cursor-pointer'
+                    className='group flex min-w-0 flex-shrink-0 cursor-pointer items-center gap-3 sm:gap-4'
                 >
                     <Image 
                         src="/logo.jpg" 
@@ -27,8 +27,8 @@ export const Header: React.FC<Props> = ({ className }) => {
                         height={35} 
                         className='flex-shrink-0 transition-transform duration-200 group-hover:scale-110'
                     />
-                    <div className='flex-shrink-0'>
-                        <h1 style={{color: "#9ac42c"}} className="text-2xl uppercase font-black whitespace-nowrap transition-colors duration-200 group-hover:text-[#7da324]">
+                    <div className='min-w-0 flex-shrink-0'>
+                        <h1 style={{color: "#9ac42c"}} className="whitespace-nowrap text-xl font-black uppercase transition-colors duration-200 group-hover:text-[#7da324] sm:text-2xl">
                             Лидер Продукт
                         </h1>
                         <p style={{color: "#EE960A"}} className="text-sm leading-3 whitespace-nowrap transition-colors duration-200 group-hover:text-[#d18209]">
@@ -38,12 +38,14 @@ export const Header: React.FC<Props> = ({ className }) => {
                 </Link>
 
                 {/* Центральная часть */}
-                <div className='mx-10 flex-1'>
-                    <SearchInput/>
+                <div className='order-3 w-full flex-none md:order-none md:mx-10 md:flex-1'>
+                    <Suspense fallback={<div className="h-11 rounded-2xl bg-gray-100" />}>
+                        <SearchInput/>
+                    </Suspense>
                 </div>
 
                 {/* Правая часть */}
-                <div className='flex items-center gap-3 flex-shrink-0'>
+                <div className='ml-auto flex flex-shrink-0 items-center gap-2 sm:gap-3'>
                     <Button variant="outline" className='flex items-center gap-1 whitespace-nowrap'>
                         <User size={16}/>
                         Войти
