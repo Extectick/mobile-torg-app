@@ -164,12 +164,8 @@ async function down() {
 }
 
 async function main() {
-    try {
-        await down()
-        await up()
-    } catch (e) {
-        console.error(e)
-    }
+    await down()
+    await up()
 }
 
 main()
