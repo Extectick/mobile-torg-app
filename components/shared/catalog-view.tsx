@@ -6,6 +6,10 @@ import { Filters } from './filters'
 import { CatalogProduct } from './products-grid'
 import { CategoryFoldersView, CatalogCategoryNode } from './category-folders-view'
 import { ProductDetailsDialog } from './product-details-dialog'
+import { SearchInput } from './search-input'
+import { Button } from '../ui'
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from '../ui/drawer'
+import { SlidersHorizontal } from 'lucide-react'
 
 interface CatalogCategory {
   id: number
@@ -85,6 +89,7 @@ export const CatalogView: React.FC<Props> = ({ categories }) => {
   const roots = React.useMemo(() => buildCategoryTree(categories), [categories])
   const allCategories = React.useMemo(() => flattenCategories(roots), [roots])
   const [activeCategoryId, setActiveCategoryId] = React.useState<number | null>(null)
+  const [mobileFiltersOpen, setMobileFiltersOpen] = React.useState(false)
   const searchQuery = (searchParams.get('query') || '').trim()
   const categoryParam = searchParams.get('category')
   const productParam = searchParams.get('product')
@@ -167,6 +172,16 @@ export const CatalogView: React.FC<Props> = ({ categories }) => {
     router.push(`/?category=${categoryId}`)
   }, [router])
 
+  const handleMobileSelectAll = React.useCallback(() => {
+    handleSelectAll()
+    setMobileFiltersOpen(false)
+  }, [handleSelectAll])
+
+  const handleMobileSelectCategory = React.useCallback((categoryId: number) => {
+    handleSelectCategory(categoryId)
+    setMobileFiltersOpen(false)
+  }, [handleSelectCategory])
+
   const handleOpenProduct = React.useCallback((productId: number) => {
     const params = new URLSearchParams(searchParams.toString())
     params.set('product', String(productId))
@@ -184,8 +199,8 @@ export const CatalogView: React.FC<Props> = ({ categories }) => {
 
   return (
     <>
-      <div className="flex flex-col gap-8 lg:flex-row lg:gap-[36px]">
-        <aside className="w-full lg:sticky lg:top-[calc(var(--app-header-height,80px)+16px)] lg:max-h-[calc(100vh-var(--app-header-height,80px)-2rem)] lg:w-[300px] lg:shrink-0 lg:overflow-y-auto lg:pr-1">
+      <div className="flex flex-col gap-8 lg:flex-row lg:gap-[var(--catalog-gap)]">
+        <aside className="hidden lg:block lg:w-[var(--sidebar-width)] lg:shrink-0 lg:self-start lg:pr-1 [@media_(min-width:1024px)_and_(min-height:850px)]:sticky [@media_(min-width:1024px)_and_(min-height:850px)]:top-[calc(var(--app-header-height,80px)+16px)]">
           <Filters
             catalogRoots={roots}
             activeCategoryId={effectiveActiveCategoryId}
@@ -197,7 +212,43 @@ export const CatalogView: React.FC<Props> = ({ categories }) => {
           />
         </aside>
 
-        <section className="min-w-0 flex-1">
+        <section className="min-w-0 flex-1 pb-44 lg:pb-0">
+          <div className="fixed inset-x-0 bottom-[calc(env(safe-area-inset-bottom)+6.7rem)] z-40 flex gap-2 px-3 sm:px-6 lg:hidden">
+            <React.Suspense fallback={<div className="h-11 flex-1 rounded-2xl bg-gray-100" />}>
+              <SearchInput className="h-11" variant="floating" resultsPlacement="top" />
+            </React.Suspense>
+
+            <Drawer open={mobileFiltersOpen} onOpenChange={setMobileFiltersOpen}>
+              <DrawerTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="size-11 shrink-0 rounded-2xl border-white/70 bg-white/85 text-gray-700 opacity-95 shadow-lg shadow-black/10 backdrop-blur transition hover:bg-white focus-visible:ring-primary/30"
+                  aria-label="Открыть фильтры"
+                >
+                  <SlidersHorizontal className="size-5" />
+                </Button>
+              </DrawerTrigger>
+              <DrawerContent className="max-h-[85dvh] overflow-hidden rounded-t-xl bg-white">
+                <DrawerHeader className="border-b border-black/5 px-4 pb-3 pt-4">
+                  <DrawerTitle className="text-lg font-extrabold">Каталог и фильтры</DrawerTitle>
+                </DrawerHeader>
+                <div className="overflow-y-auto">
+                  <Filters
+                    surface="plain"
+                    catalogRoots={roots}
+                    activeCategoryId={effectiveActiveCategoryId}
+                    activePathIds={activePathIds}
+                    allProductsCount={allProducts.length}
+                    getBranchProducts={(category) => flattenProducts([category])}
+                    onSelectAll={handleMobileSelectAll}
+                    onSelectCategory={handleMobileSelectCategory}
+                  />
+                </div>
+              </DrawerContent>
+            </Drawer>
+          </div>
+
           <CategoryFoldersView
             activeCategory={activeCategory}
             breadcrumbs={activePath}

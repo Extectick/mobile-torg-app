@@ -213,6 +213,15 @@ export function useProductPurchase({
     requestAnimationFrame(() => input.select())
   }, [])
 
+  const handleQuantityKeyDown = React.useCallback((event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key !== 'Enter') {
+      return
+    }
+
+    event.preventDefault()
+    event.currentTarget.blur()
+  }, [])
+
   return {
     availablePackages,
     selectedPackage,
@@ -232,5 +241,6 @@ export function useProductPurchase({
     handleQuantityInputChange,
     handleQuantityBlur,
     handleQuantityFocus,
+    handleQuantityKeyDown,
   }
 }

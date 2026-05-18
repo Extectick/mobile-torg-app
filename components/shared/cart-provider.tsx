@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui'
 import { useCart } from '@/store/cart'
+import { MobileCartBar } from './mobile-cart-bar'
 
 export const CartProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
   const mergePrompt = useCart((state) => state.mergePrompt)
@@ -29,6 +30,7 @@ export const CartProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
   return (
     <>
       {children}
+      <MobileCartBar />
       <Dialog open={Boolean(mergePrompt)} onOpenChange={(open) => {
         if (!open && !isMerging) {
           declineGuestCartMerge()

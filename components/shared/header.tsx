@@ -1,17 +1,17 @@
 'use client'
 
-import { cn } from '@/lib/utils';
-import { Container } from './container';
-import React, { Suspense } from 'react';
-import { Button } from '../ui';
-import { ArrowRight, ShoppingCart, User } from 'lucide-react';
-import { SearchInput } from './search-input';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { getCartTotals, useCart } from '@/store/cart';
+import { cn } from '@/lib/utils'
+import { Container } from './container'
+import React, { Suspense } from 'react'
+import { Button } from '../ui'
+import { ShoppingCart, User } from 'lucide-react'
+import { SearchInput } from './search-input'
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+import { getCartTotals, useCart } from '@/store/cart'
 
 interface Props {
-    className?: string;
+    className?: string
 }
 
 const navItems = [
@@ -22,7 +22,7 @@ const navItems = [
 ]
 
 interface HeaderNavProps extends React.HTMLAttributes<HTMLElement> {
-    compact?: boolean;
+    compact?: boolean
 }
 
 const HeaderNav: React.FC<HeaderNavProps> = ({ compact = false, className, ...props }) => {
@@ -32,7 +32,7 @@ const HeaderNav: React.FC<HeaderNavProps> = ({ compact = false, className, ...pr
         <nav className={cn('min-w-0', className)} {...props}>
             <div className={cn(
                 'flex gap-2 overflow-x-auto',
-                compact ? 'py-1' : 'py-3',
+                compact ? 'py-1' : 'py-[var(--header-nav-y)]',
             )}>
                 {navItems.map((item) => {
                     const active = item.href === '/' ? pathname === '/' : pathname.startsWith(item.href)
@@ -64,8 +64,7 @@ export const Header: React.FC<Props> = ({ className }) => {
     const headerRef = React.useRef<HTMLElement | null>(null)
     const cartItems = useCart((state) => state.items)
     const cartHydrated = useCart((state) => state.hydrated)
-    const { totalAmount, totalCount } = React.useMemo(() => getCartTotals(cartItems), [cartItems])
-    const cartCountLabel = cartHydrated ? totalCount : 0
+    const { totalAmount } = React.useMemo(() => getCartTotals(cartItems), [cartItems])
     const cartAmountLabel = cartHydrated ? totalAmount : 0
 
     React.useEffect(() => {
@@ -144,15 +143,14 @@ export const Header: React.FC<Props> = ({ className }) => {
                 )}
             >
                 <Container className={cn(
-                    'relative flex w-full flex-wrap items-center justify-between transition-[gap,padding] duration-300 ease-out',
-                    isCompact ? 'gap-3 py-2 lg:flex-nowrap' : 'gap-4 py-4 md:flex-nowrap md:py-8',
+                    'relative flex w-full flex-wrap items-center justify-between px-4 transition-[gap,padding] duration-300 ease-out sm:px-6 lg:px-0',
+                    isCompact ? 'gap-x-2 gap-y-2 py-2 lg:flex-nowrap' : 'gap-x-3 gap-y-3 py-4 sm:gap-x-4 md:flex-nowrap lg:py-[var(--header-main-y)]',
                 )}>
-                    {/* Левая часть - теперь кликабельная */}
                     <Link
                         href="/"
                         className={cn(
-                            'group flex min-w-0 shrink-0 cursor-pointer items-center transition-[gap] duration-300 ease-out',
-                            isCompact ? 'gap-2' : 'gap-3 sm:gap-4',
+                            'group flex min-w-0 flex-1 cursor-pointer items-center transition-[gap] duration-300 ease-out sm:flex-none',
+                            isCompact ? 'gap-2' : 'gap-2.5 sm:gap-4',
                         )}
                     >
                         <img
@@ -162,24 +160,28 @@ export const Header: React.FC<Props> = ({ className }) => {
                             height={50}
                             className={cn(
                                 'shrink-0 transition-transform duration-300 ease-out group-hover:scale-110',
-                                isCompact ? 'size-9' : 'size-[50px]',
+                                isCompact ? 'size-9' : 'size-14 sm:size-[58px]',
                             )}
                         />
-                        <div className='min-w-0 shrink-0'>
+                        <div className="min-w-0">
                             <h1
-                                style={{color: "#9ac42c"}}
+                                style={{ color: '#9ac42c' }}
                                 className={cn(
-                                    'whitespace-nowrap font-black uppercase transition-[font-size,color] duration-300 ease-out group-hover:text-[#7da324]',
-                                    isCompact ? 'text-base sm:text-lg' : 'text-xl sm:text-2xl',
+                                    'whitespace-nowrap font-black uppercase leading-none transition-[font-size,color] duration-300 ease-out group-hover:text-[#7da324]',
+                                    isCompact
+                                        ? 'text-[clamp(0.92rem,3.7vw,1.12rem)] sm:text-lg'
+                                        : 'text-[clamp(1.18rem,4.9vw,1.55rem)] sm:text-[1.65rem]',
                                 )}
                             >
                                 Лидер Продукт
                             </h1>
                             <p
-                                style={{color: "#EE960A"}}
+                                style={{ color: '#EE960A' }}
                                 className={cn(
-                                    'overflow-hidden whitespace-nowrap leading-3 transition-[max-height,opacity,font-size,color] duration-300 ease-out group-hover:text-[#d18209]',
-                                    isCompact ? 'max-h-0 text-xs opacity-0 xl:max-h-4 xl:opacity-100' : 'max-h-4 text-sm opacity-100',
+                                    'mt-0.5 whitespace-nowrap leading-none transition-[font-size,color] duration-300 ease-out group-hover:text-[#d18209]',
+                                    isCompact
+                                        ? 'text-[clamp(0.68rem,2.6vw,0.82rem)] xl:text-xs'
+                                        : 'text-[clamp(0.84rem,3.45vw,1.05rem)] sm:text-base',
                                 )}
                             >
                                 быстрая доставка продуктов
@@ -189,52 +191,51 @@ export const Header: React.FC<Props> = ({ className }) => {
 
                     <HeaderNav compact className={cn(
                         'order-4 w-full overflow-hidden transition-[max-height,max-width,opacity] duration-300 ease-out lg:order-0 lg:w-auto lg:flex-none',
-                        isCompact ? 'max-h-12 opacity-100 lg:max-w-[430px]' : 'pointer-events-none max-h-0 opacity-0 lg:max-w-0',
+                        isCompact ? 'pointer-events-none max-h-0 opacity-0 lg:pointer-events-auto lg:max-h-12 lg:max-w-[min(34vw,28rem)] lg:opacity-100 2xl:max-w-[32rem]' : 'pointer-events-none max-h-0 opacity-0 lg:max-w-0',
                     )} aria-hidden={!isCompact} />
 
-                    {/* Центральная часть */}
                     <div className={cn(
-                        'relative z-[60] order-3 w-full flex-none transition-[margin] duration-300 ease-out md:order-0 md:flex-1',
-                        isCompact ? 'lg:mx-4' : 'md:mx-10',
+                        'relative z-[60] order-3 hidden w-full flex-none transition-[margin] duration-300 ease-out lg:order-0 lg:block lg:flex-1',
+                        isCompact ? 'lg:mx-3 xl:mx-5 2xl:mx-8' : 'md:mx-6 xl:mx-8 2xl:mx-12',
                     )}>
-                        <Suspense fallback={<div className="h-11 rounded-2xl bg-gray-100" />}>
-                            <SearchInput onFocusChange={setSearchFocused}/>
+                        <Suspense fallback={<div className={cn('rounded-2xl bg-gray-100', isCompact ? 'h-10 lg:h-11' : 'h-11')} />}>
+                            <SearchInput
+                                className={cn(isCompact && 'h-10 lg:h-11')}
+                                onFocusChange={setSearchFocused}
+                            />
                         </Suspense>
                     </div>
 
-                    {/* Правая часть */}
                     <div className={cn(
                         'ml-auto flex shrink-0 items-center gap-2 transition-[gap] duration-300 ease-out sm:gap-3',
                         isCompact && 'sm:gap-2',
                     )}>
-                        <Button variant="outline" className={cn(
-                            'flex items-center gap-1 whitespace-nowrap transition-[height,padding] duration-300 ease-out',
-                            isCompact && 'h-9 px-3',
-                        )}>
-                            <User size={16}/>
-                            Войти
+                        <Button
+                            variant="outline"
+                            className={cn(
+                                'size-10 gap-1.5 p-0 transition-[height,width,padding] duration-300 ease-out min-[360px]:w-auto min-[360px]:px-3 sm:h-11 sm:px-4 lg:h-11',
+                                isCompact && 'size-9 min-[360px]:w-auto min-[360px]:px-3 lg:h-11',
+                            )}
+                            aria-label="Войти"
+                        >
+                            <User size={16} />
+                            <span className="hidden min-[360px]:inline">Войти</span>
                         </Button>
 
                         <Button className={cn(
-                            'group relative flex items-center whitespace-nowrap transition-[height,padding] duration-300 ease-out',
-                            isCompact && 'h-9 px-3',
+                            'hidden h-11 items-center gap-2 whitespace-nowrap px-4 font-extrabold transition-[height,padding] duration-300 ease-out lg:flex',
+                            isCompact && 'h-11 px-4',
                         )}>
+                            <ShoppingCart className="size-4" />
                             <b>{cartAmountLabel} ₽</b>
-                            <span className='h-full w-px bg-white/30 mx-3'/>
-                            <div className="flex items-center gap-1 transition duration-300 group-hover:opacity-0">
-                                <ShoppingCart size={16} strokeWidth={2}/>
-                                <b>{cartCountLabel}</b>
-                            </div>
-                            <ArrowRight size={20} className='absolute right-5 transition duration-300 -translate-x-2 opacity-0 group-hover:opacity-100 group-hover:translate-x-0'/>
                         </Button>
                     </div>
-
                 </Container>
 
                 <div
                     className={cn(
                         'relative overflow-hidden border-t bg-white/90 transition-[max-height,opacity,border-color] duration-300 ease-out',
-                        isCompact ? 'max-h-0 border-transparent opacity-0' : 'max-h-20 opacity-100',
+                        isCompact ? 'max-h-0 border-transparent opacity-0' : 'max-h-16 opacity-100',
                         searchFocused && 'border-transparent',
                     )}
                     aria-hidden={isCompact}

@@ -87,6 +87,15 @@ html {
 
 :root {
   --radius: 0.65rem;
+  --content-max-width: 1280px;
+  --catalog-gap: 1.5rem;
+  --sidebar-width: 280px;
+  --card-min-width: 230px;
+  --card-gap: 1.25rem;
+  --header-main-y: 1.5rem;
+  --header-nav-y: 0.5rem;
+  --page-catalog-top: 1.5rem;
+  --product-card-image-ratio: 4 / 3;
   --background: oklch(1 0 0);
   --foreground: oklch(0.141 0.005 285.823);
   --card: oklch(1 0 0);
@@ -118,6 +127,79 @@ html {
   --sidebar-accent-foreground: oklch(0.21 0.006 285.885);
   --sidebar-border: oklch(0.92 0.004 286.32);
   --sidebar-ring: oklch(0.7633 0.1761 124.48);
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --content-max-width: 1280px;
+    --catalog-gap: 1.5rem;
+    --sidebar-width: 280px;
+    --card-min-width: 230px;
+    --card-gap: 1.25rem;
+    --header-main-y: 1.35rem;
+    --header-nav-y: 0.45rem;
+    --page-catalog-top: 1.25rem;
+  }
+}
+
+@media (min-width: 1366px) {
+  :root {
+    --content-max-width: 1280px;
+    --catalog-gap: 1.5rem;
+    --sidebar-width: 280px;
+    --card-min-width: 225px;
+    --card-gap: 1.25rem;
+    --header-main-y: 1.25rem;
+    --page-catalog-top: 1.25rem;
+  }
+}
+
+@media (min-width: 1440px) {
+  :root {
+    --content-max-width: 1360px;
+    --catalog-gap: 1.75rem;
+    --sidebar-width: 292px;
+    --card-min-width: 220px;
+  }
+}
+
+@media (min-width: 1680px) {
+  :root {
+    --content-max-width: 1480px;
+    --catalog-gap: 2rem;
+    --sidebar-width: 300px;
+    --card-min-width: 215px;
+    --card-gap: 1.35rem;
+  }
+}
+
+@media (min-width: 1920px) {
+  :root {
+    --content-max-width: 1600px;
+    --catalog-gap: 2.25rem;
+    --sidebar-width: 320px;
+    --card-min-width: 208px;
+    --card-gap: 1.5rem;
+    --header-main-y: 1.25rem;
+    --page-catalog-top: 1.25rem;
+  }
+}
+
+@media (min-width: 2560px) {
+  :root {
+    --content-max-width: 1720px;
+    --catalog-gap: 2.5rem;
+    --sidebar-width: 320px;
+    --card-min-width: 205px;
+  }
+}
+
+@media (min-width: 1024px) and (max-height: 850px) {
+  :root {
+    --header-main-y: 1rem;
+    --header-nav-y: 0.35rem;
+    --page-catalog-top: 1rem;
+  }
 }
 
 .dark {

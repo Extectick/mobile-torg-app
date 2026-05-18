@@ -3,7 +3,6 @@
 import React from 'react'
 import { ChevronRight, Grid3X3 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { Title } from './title'
 import { ProductsGrid, CatalogProduct } from './products-grid'
 
 export interface CatalogCategoryNode {
@@ -29,19 +28,18 @@ export const CategoryFoldersView: React.FC<Props> = ({
   activeCategory,
   breadcrumbs,
   products,
-  searchQuery,
   onSelectAll,
   onSelectCategory,
   onOpenProduct,
 }) => {
   return (
     <section className="min-w-0">
-      <div className="mb-5">
-        <div className="mb-2 flex flex-wrap items-center gap-2 text-sm text-gray-500">
+      <div className="mb-4">
+        <div className="-mx-1 flex overflow-x-auto px-1 text-sm text-gray-500 sm:flex-wrap sm:items-center sm:gap-2 sm:overflow-visible sm:px-0">
           <button
             type="button"
             className={cn(
-              'inline-flex h-8 items-center gap-2 rounded-md px-2.5 font-semibold transition hover:bg-black/5',
+              'inline-flex h-8 shrink-0 items-center gap-2 rounded-md px-2.5 font-semibold transition hover:bg-black/5',
               !activeCategory && 'bg-primary/10 text-primary',
             )}
             onClick={onSelectAll}
@@ -52,11 +50,11 @@ export const CategoryFoldersView: React.FC<Props> = ({
 
           {breadcrumbs.map((category) => (
             <React.Fragment key={category.id}>
-              <ChevronRight className="size-4" />
+              <ChevronRight className="mt-2 size-4 shrink-0 sm:mt-0" />
               <button
                 type="button"
                 className={cn(
-                  'inline-flex h-8 items-center rounded-md px-2.5 font-semibold transition hover:bg-black/5',
+                  'inline-flex h-8 max-w-[12rem] shrink-0 items-center rounded-md px-2.5 font-semibold transition hover:bg-black/5 sm:max-w-none',
                   category.id === activeCategory?.id && 'bg-primary/10 text-primary',
                 )}
                 onClick={() => onSelectCategory(category.id)}
@@ -65,15 +63,6 @@ export const CategoryFoldersView: React.FC<Props> = ({
               </button>
             </React.Fragment>
           ))}
-        </div>
-
-        <div>
-          <div>
-            <Title text={activeCategory?.name || 'Все товары'} size="lg" className="font-extrabold leading-tight" />
-            <p className="mt-0.5 text-sm text-gray-500">
-              {searchQuery ? `${products.length} товаров по запросу "${searchQuery}"` : `${products.length} товаров`}
-            </p>
-          </div>
         </div>
       </div>
 

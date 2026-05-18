@@ -9,10 +9,12 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { CatalogTreeFilter } from './catalog-tree-filter';
 import { CatalogCategoryNode } from './category-folders-view';
 import { CatalogProduct } from './products-grid';
+import { cn } from '@/lib/utils';
 
 
 interface Props {
     className?: string;
+    surface?: 'card' | 'plain';
     catalogRoots?: CatalogCategoryNode[];
     activeCategoryId?: number | null;
     activePathIds?: Set<number>;
@@ -42,6 +44,7 @@ const readPriceParam = (value: string | null) => {
 
 export const Filters: React.FC<Props> = ({
     className,
+    surface = 'card',
     catalogRoots = [],
     activeCategoryId = null,
     activePathIds = new Set<number>(),
@@ -109,7 +112,11 @@ export const Filters: React.FC<Props> = ({
     }
 
     return (
-        <div className={`rounded-xl border border-black/5 bg-white p-4 shadow-sm ${className || ''}`}>
+        <div className={cn(
+            surface === 'card' && 'rounded-xl border border-black/5 bg-white p-4 shadow-sm',
+            surface === 'plain' && 'bg-white px-4 pb-[calc(env(safe-area-inset-bottom)+1rem)] pt-2',
+            className,
+        )}>
             <div className="mb-4 flex items-center gap-2">
                 <span className="flex size-8 items-center justify-center rounded-lg bg-primary/10 text-primary ring-1 ring-primary/15">
                     <FolderOpen className="size-5" />

@@ -13,6 +13,8 @@ interface Props {
   className?: string
   initialQuery?: string
   onFocusChange?: (focused: boolean) => void
+  variant?: 'default' | 'floating'
+  resultsPlacement?: 'bottom' | 'top'
 }
 
 type SuggestionItem =
@@ -25,7 +27,13 @@ const emptyResults: SearchResponse = {
   categories: [],
 }
 
-export const SearchInput: React.FC<Props> = ({ className, initialQuery = '', onFocusChange }) => {
+export const SearchInput: React.FC<Props> = ({
+  className,
+  initialQuery = '',
+  onFocusChange,
+  variant = 'default',
+  resultsPlacement = 'bottom',
+}) => {
   const router = useRouter()
   const searchParams = useSearchParams()
   const urlQuery = searchParams.get('query') || ''
@@ -189,6 +197,22 @@ export const SearchInput: React.FC<Props> = ({ className, initialQuery = '', onF
   useEffect(() => {
     onFocusChange?.(focused)
   }, [focused, onFocusChange])
+
+  useEffect(() => {
+    if (variant !== 'floating') {
+      return
+    }
+
+    window.dispatchEvent(new CustomEvent('mobile-search-focus-change', {
+      detail: { focused },
+    }))
+
+    return () => {
+      window.dispatchEvent(new CustomEvent('mobile-search-focus-change', {
+        detail: { focused: false },
+      }))
+    }
+  }, [focused, variant])
 
   useEffect(() => {
     if (focused) {
@@ -367,14 +391,24 @@ export const SearchInput: React.FC<Props> = ({ className, initialQuery = '', onF
       <div
         ref={containerRef}
         className={cn(
-          'relative z-[90] flex h-11 flex-1 justify-between rounded-2xl',
+          'relative z-[90] flex h-11 flex-1 justify-between rounded-2xl transition-[background-color,box-shadow,opacity] duration-200',
+          variant === 'floating' && (
+            focused
+              ? 'bg-white opacity-100 shadow-[0_0_0_3px_rgba(154,196,44,0.20),0_12px_36px_rgba(154,196,44,0.22)]'
+              : 'bg-white/85 opacity-95 shadow-lg shadow-black/10 backdrop-blur'
+          ),
           className,
         )}
       >
         <Search className="absolute left-3 top-1/2 h-5 -translate-y-1/2 text-gray-400" />
         <input
           ref={inputRef}
-          className="w-full rounded-2xl border border-gray-200 bg-gray-100 pl-11 pr-20 outline-none shadow-sm transition-all duration-200 focus:border-primary/50 focus:ring-2 focus:ring-primary/20"
+          className={cn(
+            'w-full rounded-2xl border pl-11 pr-20 outline-none transition-all duration-200',
+            variant === 'floating'
+              ? 'border-white/70 bg-white/85 placeholder:text-gray-500 focus:border-primary/50 focus:bg-white focus:ring-2 focus:ring-primary/25'
+              : 'border-gray-200 bg-gray-100 shadow-sm focus:border-primary/50 focus:ring-2 focus:ring-primary/20',
+          )}
           type="text"
           placeholder="Найти продукт..."
           value={searchQuery}
@@ -404,7 +438,10 @@ export const SearchInput: React.FC<Props> = ({ className, initialQuery = '', onF
       {focused && searchQuery && (
         <div
           ref={resultsRef}
-          className="absolute left-0 right-0 top-full z-[90] mt-2 max-h-[min(24rem,calc(100vh-8rem))] overflow-y-auto rounded-lg border border-gray-100 bg-white shadow-xl"
+          className={cn(
+            'absolute left-0 right-0 z-[90] max-h-[min(24rem,calc(100dvh-var(--app-header-height,80px)-1rem))] overflow-y-auto rounded-lg border border-gray-100 bg-white shadow-xl',
+            resultsPlacement === 'top' ? 'bottom-full mb-2' : 'top-full mt-2',
+          )}
         >
           {resultsList}
         </div>

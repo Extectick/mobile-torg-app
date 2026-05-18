@@ -82,7 +82,7 @@ export default async function Home() {
   const categories = await getCatalog()
 
   return (
-    <Container className="mt-8 pb-14 px-4 scroll-smooth sm:px-6 lg:px-0">
+    <Container className="mt-8 pb-14 px-4 scroll-smooth sm:px-6 lg:mt-[var(--page-catalog-top)] lg:px-0">
       <Suspense fallback={null}>
         <CatalogView categories={categories} />
       </Suspense>

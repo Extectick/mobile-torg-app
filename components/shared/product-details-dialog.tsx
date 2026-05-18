@@ -71,6 +71,7 @@ export const ProductDetailsDialog: React.FC<Props> = ({ product, open, onOpenCha
     handleQuantityInputChange,
     handleQuantityBlur,
     handleQuantityFocus,
+    handleQuantityKeyDown,
   } = useProductPurchase({
     price: product?.price ?? 0,
     unit: product?.unit ?? 'шт',
@@ -81,18 +82,18 @@ export const ProductDetailsDialog: React.FC<Props> = ({ product, open, onOpenCha
 
   return (
     <Dialog open={open && Boolean(product)} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[calc(100vw-2rem)] max-w-none overflow-hidden p-0 sm:max-w-none md:max-w-none lg:max-w-none xl:w-[72rem]">
+      <DialogContent className="w-[calc(100vw-2rem)] max-w-none overflow-hidden p-0 sm:max-w-none md:max-w-none lg:w-[min(72rem,calc(100vw-3rem))] lg:max-w-none xl:w-[76rem] 2xl:w-[82rem]">
         {product && (
-          <div className="grid max-h-[calc(100vh-2rem)] gap-0 overflow-y-auto lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
-            <div className="flex min-h-[240px] items-center justify-center bg-gray-50 p-4 ring-1 ring-black/[0.03] sm:min-h-[340px] sm:p-6 lg:min-h-[580px]">
+          <div className="grid max-h-[calc(100vh-2rem)] gap-0 overflow-y-auto lg:grid-cols-[minmax(0,1.08fr)_minmax(0,0.92fr)] 2xl:grid-cols-[minmax(0,1.12fr)_minmax(0,0.88fr)]">
+            <div className="flex min-h-[240px] items-center justify-center bg-gray-50 p-4 ring-1 ring-black/[0.03] sm:min-h-[340px] sm:p-6 lg:min-h-[520px] xl:min-h-[560px] 2xl:min-h-[620px]">
               <img
                 src={product.imagesJson}
                 alt={product.name}
-                className="max-h-[260px] w-full object-contain sm:max-h-[340px] lg:max-h-[min(58vh,560px)]"
+                className="max-h-[260px] w-full object-contain sm:max-h-[340px] lg:max-h-[min(56vh,520px)] xl:max-h-[min(58vh,560px)] 2xl:max-h-[min(60vh,620px)]"
               />
             </div>
 
-            <div className="flex min-w-0 flex-col p-4 sm:p-6 lg:p-8">
+            <div className="flex min-w-0 flex-col p-4 sm:p-6 lg:p-7 xl:p-8 2xl:p-10">
               <DialogHeader className="pr-8 text-left">
                 <DialogTitle className="text-2xl font-extrabold leading-tight text-black sm:text-3xl lg:text-4xl">
                   {product.name}
@@ -174,11 +175,13 @@ export const ProductDetailsDialog: React.FC<Props> = ({ product, open, onOpenCha
                       className="h-full min-w-0 flex-1 border-0 bg-transparent p-0 text-center text-base font-extrabold text-white outline-none [appearance:textfield] placeholder:text-white/70 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                       type="text"
                       inputMode="decimal"
+                      enterKeyHint="done"
                       pattern="[0-9]*[.,]?[0-9]*"
                       value={quantityInput}
                       onFocus={handleQuantityFocus}
                       onBlur={handleQuantityBlur}
                       onChange={handleQuantityInputChange}
+                      onKeyDown={handleQuantityKeyDown}
                       aria-label={`Количество ${product.name}`}
                     />
                     <button
