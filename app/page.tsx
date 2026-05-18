@@ -2,6 +2,8 @@ import { CatalogView, Container } from '@/components/shared'
 import { Suspense } from 'react'
 import { prisma } from '@/prisma/prisma-client'
 
+export const dynamic = 'force-dynamic'
+
 interface CatalogProduct {
   id: number
   name: string
