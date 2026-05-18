@@ -6,6 +6,7 @@ services:
       - "${WEB_PORT:-3000}:80"
     volumes:
       - ./docker/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./logs/nginx:/var/log/nginx
     depends_on:
       - web
 
@@ -29,6 +30,10 @@ services:
       DATABASE_URL: ${DATABASE_URL}
       LOG_HTTP_REQUESTS: ${LOG_HTTP_REQUESTS:-true}
       LOG_PRISMA_QUERIES: ${LOG_PRISMA_QUERIES:-false}
+      ERROR_IMAGES_DIR: /app/logs/error-images
       NODE_ENV: production
+    volumes:
+      - ./logs/app:/app/logs
+      - ./logs/error-images:/app/logs/error-images
     expose:
       - "3000"

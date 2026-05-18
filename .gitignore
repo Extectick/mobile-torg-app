@@ -12,6 +12,8 @@
 
 # testing
 /coverage
+/test-results/
+/playwright-report/
 
 # next.js
 /.next/
@@ -19,22 +21,52 @@
 
 # production
 /build
+/dist
 
 # misc
 .DS_Store
+Thumbs.db
 *.pem
+*.tmp
+*.temp
+/tmp/
+/temp/
 
-# debug
+# debug and runtime logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+*.log
+*.err.log
+*.pid
+*.seed
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
+
+# local runtime logs and captured error images
+/logs/
+
+# local databases and dumps
+*.sqlite
+*.sqlite3
+*.db
+*.dump
+*.bak
+
+# docker/local runtime data
+docker-compose.override.yml
+compose.override.yaml
+compose.override.yml
 
 # vercel
 .vercel
+
+# editor/local tooling
+.idea/
+.history/
 
 # typescript
 *.tsbuildinfo

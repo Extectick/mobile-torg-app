@@ -16,3 +16,4 @@ out
 *.tsbuildinfo
 mobile-dev*.log
 mobile-dev*.err.log
+logs

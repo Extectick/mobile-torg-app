@@ -37,6 +37,7 @@ FROM base AS runner
 ENV NODE_ENV=production
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
+ENV ERROR_IMAGES_DIR=/app/logs/error-images
 
 RUN groupadd --system --gid 1001 nodejs \
   && useradd --system --uid 1001 --gid nodejs nextjs
@@ -46,8 +47,11 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder /app/prisma ./prisma
 
+RUN mkdir -p /app/logs/error-images \
+  && chown -R nextjs:nodejs /app/logs
+
 USER nextjs
 
 EXPOSE 3000
 
-CMD ["node", "server.js"]
+CMD ["sh", "-c", "mkdir -p /app/logs/error-images && node server.js 2>&1 | tee -a /app/logs/app.log"]
