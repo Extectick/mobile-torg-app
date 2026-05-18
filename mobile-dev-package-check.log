@@ -1,0 +1,23 @@
+
+> mobile-torg-app@0.1.0 dev
+> next dev --turbopack -p 3010
+
+   ▲ Next.js 15.5.18 (Turbopack)
+   - Local:        http://localhost:3010
+   - Network:      http://172.18.0.1:3010
+   - Environments: .env
+
+ ✓ Starting...
+Creating turbopack project { dir: 'v:\\GitProjects\\mobile-torg-app', testMode: true }
+ ✓ Ready in 1821ms
+ ○ Compiling /api/catalog ...
+ ✓ Compiled /api/catalog in 1515ms
+ GET /api/catalog 200 in 2077ms
+ ○ Compiling / ...
+ ✓ Compiled / in 2.9s
+ GET / 200 in 3876ms
+ ✓ Compiled /favicon.ico in 319ms
+ GET /favicon.ico?favicon.0b3bf435.ico 200 in 1226ms
+ GET /api/categories 200 in 1377ms
+ ✓ Compiled in 106ms
+[?25h

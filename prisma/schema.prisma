@@ -84,6 +84,7 @@ model Product {
     price Float
     discountPrice Float?
     stock Int @default(0)
+    unit String @default("шт")
     imagesJson String
     isActive Boolean @default(true)
     
@@ -91,11 +92,34 @@ model Product {
     category Category @relation(fields: [categoryId], references: [id], onDelete: NoAction, onUpdate: NoAction)
     
     properties ProductProperty[]
+    packages ProductPackage[]
 
     orderItems OrderItem[] // Для аналитики - посмотреть в каких заказах этот товар
     cartItems CartItem[] // Для аналитики - посмотреть в каких корзинах этот товар
     reviews Review[] // Для аналитики - отзывы о товаре
     
+    // Для 1С
+    GUID String?
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model ProductPackage {
+    id Int @id @default(autoincrement())
+    name String
+    unit String
+    quantity Float @default(1)
+    minSaleQuantity Float @default(1)
+    quantityStep Float @default(1)
+    quantityPrecision Int @default(0)
+    price Float?
+    isDefault Boolean @default(false)
+
+    productId Int
+    product Product @relation(fields: [productId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+    cartItems CartItem[]
+
     // Для 1С
     GUID String?
 
@@ -207,16 +231,21 @@ model Cart {
 
 model CartItem {
     id Int @id @default(autoincrement())
-    quantity Int
+    quantity Float
     
     cartId Int
     cart Cart @relation(fields: [cartId], references: [id], onDelete: Cascade, onUpdate: Cascade)
     
     productId Int
     product Product @relation(fields: [productId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+    packageId Int
+    productPackage ProductPackage @relation(fields: [packageId], references: [id], onDelete: NoAction, onUpdate: NoAction)
     
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
+
+    @@unique([cartId, productId, packageId])
 }
 
 model Address {

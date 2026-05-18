@@ -22,6 +22,7 @@ interface Props {
   searchQuery?: string
   onSelectAll: () => void
   onSelectCategory: (categoryId: number) => void
+  onOpenProduct?: (productId: number) => void
 }
 
 export const CategoryFoldersView: React.FC<Props> = ({
@@ -31,6 +32,7 @@ export const CategoryFoldersView: React.FC<Props> = ({
   searchQuery,
   onSelectAll,
   onSelectCategory,
+  onOpenProduct,
 }) => {
   return (
     <section className="min-w-0">
@@ -76,7 +78,7 @@ export const CategoryFoldersView: React.FC<Props> = ({
       </div>
 
       {products.length > 0 ? (
-        <ProductsGrid items={products} />
+        <ProductsGrid items={products} onOpenProduct={onOpenProduct} />
       ) : (
         <div className="rounded-lg border border-dashed border-black/10 bg-white/60 p-8 text-center text-gray-500">
           Ничего не найдено

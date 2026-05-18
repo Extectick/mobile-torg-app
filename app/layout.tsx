@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Nunito } from "next/font/google";
 import "./globals.css";
 import { Header } from "@/components/shared/header";
-import { MainNav } from "@/components/shared/main-nav";
+import { CartProvider } from "@/components/shared/cart-provider";
 
 const nunito = Nunito({
   variable: "--font-nunito",
@@ -23,11 +23,12 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={nunito.className}>
-        <main className="min-h-screen">
-          <Header/>
-          <MainNav/>
-          {children}
-        </main>
+        <CartProvider>
+          <main className="min-h-screen">
+            <Header/>
+            {children}
+          </main>
+        </CartProvider>
       </body>
     </html>
   );

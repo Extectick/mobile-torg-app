@@ -8,8 +8,20 @@ export interface SearchProduct {
   name: string
   description: string | null
   price: number
+  unit: string
   imagesJson: string
   categoryId: number
+  packages: {
+    id: number
+    name: string
+    unit: string
+    quantity: number
+    minSaleQuantity: number
+    quantityStep: number
+    quantityPrecision: number
+    price: number | null
+    isDefault: boolean
+  }[]
   category?: {
     name: string
   }

@@ -1,13 +1,10 @@
 'use client'
 
 import React from 'react';
-import qs from 'qs'
 import { FolderOpen } from 'lucide-react';
 import { FilterCheckbox } from './filtercheck-box';
 import { Input } from '../ui';
 import { RangeSlider } from './range-slider';
-import { CheckboxCategoryFiltersGroup } from './category-filter-groups';
-import { useFilterCategories } from '@/hooks/useFilterCategories';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { CatalogTreeFilter } from './catalog-tree-filter';
 import { CatalogCategoryNode } from './category-folders-view';
@@ -30,6 +27,19 @@ interface PriceProps {
     priceTo?: number
 }
 
+const PRICE_MIN = 0
+const PRICE_MAX = 10000
+
+const readPriceParam = (value: string | null) => {
+    if (!value) {
+        return undefined
+    }
+
+    const numberValue = Number(value)
+
+    return Number.isFinite(numberValue) ? numberValue : undefined
+}
+
 export const Filters: React.FC<Props> = ({
     className,
     catalogRoots = [],
@@ -42,35 +52,61 @@ export const Filters: React.FC<Props> = ({
 }) => {
     const router = useRouter()
     const searchParams = useSearchParams()
-    const { categories, loading, onAddId, selectedCategories } = useFilterCategories()
-    const [prices, setPrice] = React.useState<PriceProps>({})
-    const updatePrice = (name: keyof PriceProps, value: number) => {
-        setPrice({
-            ...prices,
-            [name]: value
-        })
-    }
+    const priceFromParam = searchParams.get('priceFrom')
+    const priceToParam = searchParams.get('priceTo')
+    const [prices, setPrice] = React.useState<PriceProps>(() => ({
+        priceFrom: readPriceParam(priceFromParam),
+        priceTo: readPriceParam(priceToParam),
+    }))
 
-    
     React.useEffect(() => {
-        // Все фильтры
-        const filters = {
-            ...prices,
-            query: searchParams.get('query') || undefined,
-            category: searchParams.get('category') || undefined,
-            categories: Array.from(selectedCategories)
+        setPrice({
+            priceFrom: readPriceParam(priceFromParam),
+            priceTo: readPriceParam(priceToParam),
+        })
+    }, [priceFromParam, priceToParam])
+
+    const commitPrices = React.useCallback((nextPrices: PriceProps) => {
+        const params = new URLSearchParams(searchParams.toString())
+
+        if (nextPrices.priceFrom === undefined || nextPrices.priceFrom <= PRICE_MIN) {
+            params.delete('priceFrom')
+        } else {
+            params.set('priceFrom', String(nextPrices.priceFrom))
         }
 
-        const query = qs.stringify(filters, {
-            arrayFormat: 'comma'
-        })
+        if (nextPrices.priceTo === undefined || nextPrices.priceTo >= PRICE_MAX) {
+            params.delete('priceTo')
+        } else {
+            params.set('priceTo', String(nextPrices.priceTo))
+        }
 
-        const currentQuery = searchParams.toString()
+        const query = params.toString()
 
-        if (query !== currentQuery) {
+        if (query !== searchParams.toString()) {
             router.replace(query ? `?${query}` : '/')
         }
-    }, [prices, selectedCategories, router, searchParams])
+    }, [router, searchParams])
+
+    const updatePrice = (name: keyof PriceProps, value: string) => {
+        const numberValue = value === '' ? undefined : Number(value)
+
+        setPrice((currentPrices) => ({
+            ...currentPrices,
+            [name]: Number.isFinite(numberValue) ? numberValue : undefined,
+        }))
+    }
+
+    const handlePriceInputBlur = () => {
+        commitPrices(prices)
+    }
+
+    const handlePriceInputKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+        if (event.key === 'Enter') {
+            event.currentTarget.blur()
+            commitPrices(prices)
+        }
+    }
 
     return (
         <div className={`rounded-xl border border-black/5 bg-white p-4 shadow-sm ${className || ''}`}>
@@ -103,47 +139,40 @@ export const Filters: React.FC<Props> = ({
             {/* {Фильтр цен} */}
             <div className='mt-4 border-t border-black/5 pt-4'>
                 <p className="font-bold mb-3">Цена от и до:</p>
-                <div className="flex gap-3 mb-5">
+                <div className="mb-5 grid grid-cols-2 gap-3">
                     <Input 
                         type='number' 
                         placeholder='0' 
                         min={0} 
                         max={10000} 
-                        value={String(prices.priceFrom)}
-                        onChange={(e) => updatePrice('priceFrom', Number(e.target.value))}
+                        value={prices.priceFrom ?? ''}
+                        onChange={(e) => updatePrice('priceFrom', e.target.value)}
+                        onBlur={handlePriceInputBlur}
+                        onKeyDown={handlePriceInputKeyDown}
+                        className="min-w-0"
                     />
                     <Input 
                         type='number' 
                         placeholder='10000' 
                         min={100} 
                         max={10000} 
-                        value={String(prices.priceTo)}
-                        onChange={(e) => updatePrice('priceTo', Number(e.target.value))}
+                        value={prices.priceTo ?? ''}
+                        onChange={(e) => updatePrice('priceTo', e.target.value)}
+                        onBlur={handlePriceInputBlur}
+                        onKeyDown={handlePriceInputKeyDown}
+                        className="min-w-0"
                     />
                 </div>
 
                 <RangeSlider 
-                    min={0} 
-                    max={10000} 
+                    min={PRICE_MIN} 
+                    max={PRICE_MAX} 
                     step={10} 
-                    value={[prices.priceFrom || 0, prices.priceTo || 10000]}
+                    value={[prices.priceFrom ?? PRICE_MIN, prices.priceTo ?? PRICE_MAX]}
                     onValueChange={([priceFrom, priceTo]) => setPrice({ priceFrom, priceTo})}
+                    onValueCommit={([priceFrom, priceTo]) => commitPrices({ priceFrom, priceTo })}
                 />
-                
             </div>
-            {/* Список всех категорий товаров */}
-            <CheckboxCategoryFiltersGroup
-                title = 'Тип продукции'
-                className = 'mt-5'
-                limit = {5}
-                defaultItems = {categories.slice(0,6)}
-                items = {categories}
-                loading = {loading}
-                selectedIds={selectedCategories}
-                onClickCheckBox={onAddId}
-                
-            />
-
         </div>
     )
 }

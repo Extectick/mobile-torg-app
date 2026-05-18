@@ -3,6 +3,7 @@
 import { cn } from '@/lib/utils'
 import { FolderOpen, Search, X } from 'lucide-react'
 import React, { useRef, useCallback, useState, useEffect, useMemo } from 'react'
+import { createPortal } from 'react-dom'
 import { useClickAway, useDebounce } from 'ahooks'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Api } from '@/services/api-client'
@@ -11,6 +12,7 @@ import { SearchCategory, SearchProduct, SearchResponse } from '@/services/search
 interface Props {
   className?: string
   initialQuery?: string
+  onFocusChange?: (focused: boolean) => void
 }
 
 type SuggestionItem =
@@ -23,7 +25,7 @@ const emptyResults: SearchResponse = {
   categories: [],
 }
 
-export const SearchInput: React.FC<Props> = ({ className, initialQuery = '' }) => {
+export const SearchInput: React.FC<Props> = ({ className, initialQuery = '', onFocusChange }) => {
   const router = useRouter()
   const searchParams = useSearchParams()
   const urlQuery = searchParams.get('query') || ''
@@ -36,13 +38,14 @@ export const SearchInput: React.FC<Props> = ({ className, initialQuery = '' }) =
   const inputRef = useRef<HTMLInputElement>(null)
   const resultsRef = useRef<HTMLDivElement>(null)
   const [showOverlay, setShowOverlay] = useState(false)
+  const [mounted, setMounted] = useState(false)
   const clickedItemRef = useRef(false)
 
   const debouncedQuery = useDebounce(searchQuery, { wait: 300 })
   const suggestionItems = useMemo<SuggestionItem[]>(() => [
+    { type: 'search' as const },
     ...results.categories.map((category) => ({ type: 'category' as const, category })),
     ...results.products.map((product) => ({ type: 'product' as const, product })),
-    { type: 'search' as const },
   ], [results])
 
   useEffect(() => {
@@ -59,15 +62,15 @@ export const SearchInput: React.FC<Props> = ({ className, initialQuery = '' }) =
   }, [])
 
   const clearSearch = useCallback(() => {
+    clickedItemRef.current = false
     setSearchQuery('')
     setResults(emptyResults)
     setActiveIndex(-1)
+    setFocused(false)
 
     if (urlQuery) {
       router.push('/')
     }
-
-    inputRef.current?.focus()
   }, [router, urlQuery])
 
   useClickAway(closeSearch, containerRef)
@@ -92,10 +95,13 @@ export const SearchInput: React.FC<Props> = ({ className, initialQuery = '' }) =
 
   const handleProductSelect = useCallback((productId: number) => {
     clickedItemRef.current = true
-    router.push(`/product/${productId}`)
+    const params = new URLSearchParams(searchParams.toString())
+    params.set('product', String(productId))
+
+    router.push(`/?${params.toString()}`, { scroll: false })
     closeSearch()
     inputRef.current?.blur()
-  }, [router, closeSearch])
+  }, [router, searchParams, closeSearch])
 
   const activateItem = useCallback((item: SuggestionItem) => {
     if (item.type === 'category') {
@@ -177,6 +183,14 @@ export const SearchInput: React.FC<Props> = ({ className, initialQuery = '' }) =
   }, [debouncedQuery, focused])
 
   useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  useEffect(() => {
+    onFocusChange?.(focused)
+  }, [focused, onFocusChange])
+
+  useEffect(() => {
     if (focused) {
       setShowOverlay(true)
     } else {
@@ -198,9 +212,40 @@ export const SearchInput: React.FC<Props> = ({ className, initialQuery = '' }) =
     }
   }, [activeIndex])
 
+  const overlay = showOverlay ? (
+    <div
+      className={cn(
+        //'fixed inset-0 z-[60] bg-black/50 transition-opacity duration-200',
+        focused ? 'opacity-100' : 'opacity-0',
+      )}
+    />
+  ) : null
+
   const resultsList = useMemo(() => {
     if (isLoading) {
-      return <div className="p-4 text-center text-gray-500">Загрузка...</div>
+      return (
+        <ul>
+          <li
+            key="search-action"
+            data-index={0}
+            className={cn(
+              'sticky top-0 z-10 cursor-pointer border-b border-gray-100 bg-white p-3 font-medium text-primary shadow-sm transition-all duration-150 hover:bg-primary/5',
+              activeIndex === 0 && 'bg-primary/10',
+            )}
+            onMouseDown={() => {
+              clickedItemRef.current = true
+            }}
+            onClick={handleSearch}
+          >
+            <div className="flex min-w-0 items-center">
+              <div className={cn('mr-3 h-6 w-1 rounded-full', activeIndex === 0 ? 'bg-primary' : 'bg-transparent')} />
+              <Search className="mr-3 size-4 shrink-0" />
+              <span className="min-w-0 truncate">Искать &quot;{searchQuery}&quot;</span>
+            </div>
+          </li>
+          <li className="p-4 text-center text-gray-500">Загрузка...</li>
+        </ul>
+      )
     }
 
     const renderCategory = (category: SearchCategory, index: number) => (
@@ -265,7 +310,28 @@ export const SearchInput: React.FC<Props> = ({ className, initialQuery = '' }) =
     )
 
     const content: React.ReactNode[] = []
-    let currentIndex = 0
+    let currentIndex = 1
+
+    content.push(
+      <li
+        key="search-action"
+        data-index={0}
+        className={cn(
+          'sticky top-0 z-10 cursor-pointer border-b border-gray-100 bg-white p-3 font-medium text-primary shadow-sm transition-all duration-150 hover:bg-primary/5',
+          activeIndex === 0 && 'bg-primary/10',
+        )}
+        onMouseDown={() => {
+          clickedItemRef.current = true
+        }}
+        onClick={handleSearch}
+      >
+        <div className="flex min-w-0 items-center">
+          <div className={cn('mr-3 h-6 w-1 rounded-full', activeIndex === 0 ? 'bg-primary' : 'bg-transparent')} />
+          <Search className="mr-3 size-4 shrink-0" />
+          <span className="min-w-0 truncate">Искать &quot;{searchQuery}&quot;</span>
+        </div>
+      </li>,
+    )
 
     if (results.categories.length > 0) {
       content.push(
@@ -291,45 +357,17 @@ export const SearchInput: React.FC<Props> = ({ className, initialQuery = '' }) =
       })
     }
 
-    content.push(
-      <li
-        key="search-action"
-        data-index={currentIndex}
-        className={cn(
-          'cursor-pointer border-b border-gray-100 p-3 font-medium text-primary transition-all duration-150 hover:bg-primary/5',
-          activeIndex === currentIndex && 'bg-primary/10',
-        )}
-        onMouseDown={() => {
-          clickedItemRef.current = true
-        }}
-        onClick={handleSearch}
-      >
-        <div className="flex min-w-0 items-center">
-          <div className={cn('mr-3 h-6 w-1 rounded-full', activeIndex === currentIndex ? 'bg-primary' : 'bg-transparent')} />
-          <Search className="mr-3 size-4 shrink-0" />
-          <span className="min-w-0 truncate">Искать &quot;{searchQuery}&quot;</span>
-        </div>
-      </li>,
-    )
-
     return <ul>{content}</ul>
   }, [activeIndex, handleCategorySelect, handleProductSelect, handleSearch, isLoading, results, searchQuery])
 
   return (
     <div className="relative w-full">
-      {showOverlay && (
-        <div
-          className={cn(
-            'fixed inset-0 z-30 bg-black/50 transition-opacity duration-200',
-            focused ? 'opacity-100' : 'opacity-0',
-          )}
-        />
-      )}
+      {mounted && overlay ? createPortal(overlay, document.body) : null}
 
       <div
         ref={containerRef}
         className={cn(
-          'relative z-40 flex h-11 flex-1 justify-between rounded-2xl',
+          'relative z-[90] flex h-11 flex-1 justify-between rounded-2xl',
           className,
         )}
       >
@@ -341,7 +379,10 @@ export const SearchInput: React.FC<Props> = ({ className, initialQuery = '' }) =
           placeholder="Найти продукт..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          onFocus={() => setFocused(true)}
+          onFocus={() => {
+            clickedItemRef.current = false
+            setFocused(true)
+          }}
           onBlur={() => {
             if (!clickedItemRef.current) {
               setTimeout(closeSearch, 100)
@@ -363,7 +404,7 @@ export const SearchInput: React.FC<Props> = ({ className, initialQuery = '' }) =
       {focused && searchQuery && (
         <div
           ref={resultsRef}
-          className="absolute left-0 right-0 top-full z-40 mt-2 max-h-[min(24rem,calc(100vh-8rem))] overflow-y-auto rounded-lg border border-gray-100 bg-white shadow-xl"
+          className="absolute left-0 right-0 top-full z-[90] mt-2 max-h-[min(24rem,calc(100vh-8rem))] overflow-y-auto rounded-lg border border-gray-100 bg-white shadow-xl"
         >
           {resultsList}
         </div>

@@ -2,6 +2,53 @@ import { categories, products, carts, cartItems } from './constants'
 import { prisma } from './prisma-client'
 import { hashSync } from 'bcrypt'
 
+type SeedProduct = (typeof products)[number]
+
+function getProductUnit(product: SeedProduct) {
+    if (
+        product.name.includes('Говядина') ||
+        product.name.includes('Филе лосося') ||
+        product.name.includes('Креветки') ||
+        product.name.includes('Мидии') ||
+        product.name.includes('Кальмар') ||
+        product.name.includes('Томаты') ||
+        product.name.includes('Огурцы') ||
+        product.name.includes('Картофель') ||
+        product.name.includes('Морковь') ||
+        product.name.includes('Сыр') ||
+        product.name.includes('Моцарелла') ||
+        product.name.includes('Пармезан')
+    ) {
+        return 'кг'
+    }
+
+    return 'шт'
+}
+
+function getPackageName(unit: string) {
+    return unit === 'кг' ? 'ящик' : 'коробка'
+}
+
+function getPackageQuantity(unit: string) {
+    return unit === 'кг' ? 5 : 12
+}
+
+function getBasePackageRules(unit: string) {
+    if (unit === 'кг') {
+        return {
+            minSaleQuantity: 2,
+            quantityStep: 0.1,
+            quantityPrecision: 1,
+        }
+    }
+
+    return {
+        minSaleQuantity: 1,
+        quantityStep: 1,
+        quantityPrecision: 0,
+    }
+}
+
 async function up() {
     await prisma.user.createMany({
         data: [
@@ -38,15 +85,69 @@ async function up() {
     })
 
     await prisma.product.createMany({
-        data: products
+        data: products.map((product) => ({
+            ...product,
+            unit: getProductUnit(product),
+        }))
+    })
+
+    const createdProducts = await prisma.product.findMany({
+        select: {
+            id: true,
+            price: true,
+            unit: true,
+        },
+    })
+
+    await prisma.productPackage.createMany({
+        data: createdProducts.flatMap((product) => {
+            const packageQuantity = getPackageQuantity(product.unit)
+            const baseRules = getBasePackageRules(product.unit)
+
+            return [
+                {
+                    productId: product.id,
+                    name: product.unit,
+                    unit: product.unit,
+                    quantity: 1,
+                    ...baseRules,
+                    price: product.price,
+                    isDefault: true,
+                },
+                {
+                    productId: product.id,
+                    name: getPackageName(product.unit),
+                    unit: product.unit,
+                    quantity: packageQuantity,
+                    minSaleQuantity: 1,
+                    quantityStep: 1,
+                    quantityPrecision: 0,
+                    price: product.price * packageQuantity,
+                },
+            ]
+        })
     })
 
     await prisma.cart.createMany({
         data: carts
     })
 
+    const defaultPackages = await prisma.productPackage.findMany({
+        where: {
+            isDefault: true,
+        },
+        select: {
+            id: true,
+            productId: true,
+        },
+    })
+    const defaultPackageByProductId = new Map(defaultPackages.map((item) => [item.productId, item.id]))
+
     await prisma.cartItem.createMany({
-        data: cartItems
+        data: cartItems.map((item) => ({
+            ...item,
+            packageId: defaultPackageByProductId.get(item.productId) ?? item.productId,
+        }))
     })
 }
 
@@ -55,6 +156,7 @@ async function down() {
     await prisma.$executeRaw`TRUNCATE TABLE "IndividualProfile" RESTART IDENTITY CASCADE`
     await prisma.$executeRaw`TRUNCATE TABLE "Category" RESTART IDENTITY CASCADE`
     await prisma.$executeRaw`TRUNCATE TABLE "Product" RESTART IDENTITY CASCADE`
+    await prisma.$executeRaw`TRUNCATE TABLE "ProductPackage" RESTART IDENTITY CASCADE`
     await prisma.$executeRaw`TRUNCATE TABLE "Cart" RESTART IDENTITY CASCADE`
     await prisma.$executeRaw`TRUNCATE TABLE "CartItem" RESTART IDENTITY CASCADE`
 

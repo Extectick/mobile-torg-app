@@ -7,8 +7,20 @@ interface CatalogProduct {
   name: string
   description: string | null
   price: number
+  unit: string
   imagesJson: string
   categoryId: number
+  packages: {
+    id: number
+    name: string
+    unit: string
+    quantity: number
+    minSaleQuantity: number
+    quantityStep: number
+    quantityPrecision: number
+    price: number | null
+    isDefault: boolean
+  }[]
 }
 
 interface CatalogCategory {
@@ -32,8 +44,26 @@ async function getCatalog(): Promise<CatalogCategory[]> {
           name: true,
           description: true,
           price: true,
+          unit: true,
           imagesJson: true,
           categoryId: true,
+          packages: {
+            select: {
+              id: true,
+              name: true,
+              unit: true,
+              quantity: true,
+              minSaleQuantity: true,
+              quantityStep: true,
+              quantityPrecision: true,
+              price: true,
+              isDefault: true,
+            },
+            orderBy: [
+              { isDefault: 'desc' },
+              { quantity: 'asc' },
+            ],
+          },
         },
         orderBy: {
           id: 'asc',

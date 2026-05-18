@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { Filters } from './filters'
 import { CatalogProduct } from './products-grid'
 import { CategoryFoldersView, CatalogCategoryNode } from './category-folders-view'
+import { ProductDetailsDialog } from './product-details-dialog'
 
 interface CatalogCategory {
   id: number
@@ -68,6 +69,16 @@ function findCategoryPath(categories: CatalogCategoryNode[], id: number): Catalo
   return []
 }
 
+function readPriceParam(value: string | null) {
+  if (!value) {
+    return undefined
+  }
+
+  const numberValue = Number(value)
+
+  return Number.isFinite(numberValue) ? numberValue : undefined
+}
+
 export const CatalogView: React.FC<Props> = ({ categories }) => {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -76,6 +87,9 @@ export const CatalogView: React.FC<Props> = ({ categories }) => {
   const [activeCategoryId, setActiveCategoryId] = React.useState<number | null>(null)
   const searchQuery = (searchParams.get('query') || '').trim()
   const categoryParam = searchParams.get('category')
+  const productParam = searchParams.get('product')
+  const priceFrom = readPriceParam(searchParams.get('priceFrom'))
+  const priceTo = readPriceParam(searchParams.get('priceTo'))
 
   React.useEffect(() => {
     const activeExists = activeCategoryId === null || allCategories.some((category) => category.id === activeCategoryId)
@@ -102,6 +116,15 @@ export const CatalogView: React.FC<Props> = ({ categories }) => {
   }, [allCategories, categoryParam, searchQuery])
 
   const allProducts = React.useMemo(() => flattenProducts(roots), [roots])
+  const activeProduct = React.useMemo(() => {
+    const productId = Number(productParam)
+
+    if (!Number.isInteger(productId)) {
+      return null
+    }
+
+    return allProducts.find((product) => product.id === productId) ?? null
+  }, [allProducts, productParam])
   const effectiveActiveCategoryId = searchQuery ? null : activeCategoryId
   const activePath = React.useMemo(
     () => effectiveActiveCategoryId ? findCategoryPath(roots, effectiveActiveCategoryId) : [],
@@ -110,17 +133,26 @@ export const CatalogView: React.FC<Props> = ({ categories }) => {
   const activeCategory = activePath[activePath.length - 1] ?? null
   const categoryProducts = activeCategory ? flattenProducts([activeCategory]) : allProducts
   const activeProducts = React.useMemo(() => {
+    const filterByPrice = (products: CatalogProduct[]) => products.filter((product) => {
+      const aboveMin = priceFrom === undefined || product.price >= priceFrom
+      const belowMax = priceTo === undefined || product.price <= priceTo
+
+      return aboveMin && belowMax
+    })
+
     if (!searchQuery) {
-      return categoryProducts
+      return filterByPrice(categoryProducts)
     }
 
     const normalizedQuery = searchQuery.toLowerCase()
 
-    return allProducts.filter((product) =>
+    const searchedProducts = allProducts.filter((product) =>
       product.name.toLowerCase().includes(normalizedQuery) ||
       product.description?.toLowerCase().includes(normalizedQuery)
     )
-  }, [allProducts, categoryProducts, searchQuery])
+
+    return filterByPrice(searchedProducts)
+  }, [allProducts, categoryProducts, priceFrom, priceTo, searchQuery])
   const activePathIds = React.useMemo(
     () => new Set(activePath.map((category) => category.id)),
     [activePath],
@@ -135,9 +167,25 @@ export const CatalogView: React.FC<Props> = ({ categories }) => {
     router.push(`/?category=${categoryId}`)
   }, [router])
 
+  const handleOpenProduct = React.useCallback((productId: number) => {
+    const params = new URLSearchParams(searchParams.toString())
+    params.set('product', String(productId))
+
+    router.push(`/?${params.toString()}`, { scroll: false })
+  }, [router, searchParams])
+
+  const handleCloseProduct = React.useCallback(() => {
+    const params = new URLSearchParams(searchParams.toString())
+    params.delete('product')
+
+    const query = params.toString()
+    router.replace(query ? `/?${query}` : '/', { scroll: false })
+  }, [router, searchParams])
+
   return (
+    <>
       <div className="flex flex-col gap-8 lg:flex-row lg:gap-[36px]">
-        <aside className="w-full lg:w-[300px] lg:shrink-0">
+        <aside className="w-full lg:sticky lg:top-[calc(var(--app-header-height,80px)+16px)] lg:max-h-[calc(100vh-var(--app-header-height,80px)-2rem)] lg:w-[300px] lg:shrink-0 lg:overflow-y-auto lg:pr-1">
           <Filters
             catalogRoots={roots}
             activeCategoryId={effectiveActiveCategoryId}
@@ -157,8 +205,19 @@ export const CatalogView: React.FC<Props> = ({ categories }) => {
             searchQuery={searchQuery}
             onSelectAll={handleSelectAll}
             onSelectCategory={handleSelectCategory}
+            onOpenProduct={handleOpenProduct}
           />
         </section>
       </div>
+      <ProductDetailsDialog
+        product={activeProduct}
+        open={Boolean(activeProduct)}
+        onOpenChange={(open) => {
+          if (!open) {
+            handleCloseProduct()
+          }
+        }}
+      />
+    </>
   )
 }
