@@ -28,10 +28,11 @@ export interface CatalogProduct {
 interface Props {
   items: CatalogProduct[]
   onOpenProduct?: (id: number) => void
+  loadingProductId?: number | null
   className?: string
 }
 
-export const ProductsGrid: React.FC<Props> = ({ items, onOpenProduct, className }) => {
+export const ProductsGrid: React.FC<Props> = ({ items, onOpenProduct, loadingProductId = null, className }) => {
   return (
     <div className={cn('grid grid-cols-2 gap-3 min-[430px]:gap-4 sm:gap-5 md:grid-cols-[repeat(auto-fill,minmax(min(100%,var(--card-min-width)),1fr))] lg:gap-[var(--card-gap)]', className)}>
       {items.map((product) => (
@@ -45,6 +46,7 @@ export const ProductsGrid: React.FC<Props> = ({ items, onOpenProduct, className 
           unit={product.unit}
           packages={product.packages}
           onOpenProduct={onOpenProduct}
+          isOpening={loadingProductId === product.id}
         />
       ))}
     </div>

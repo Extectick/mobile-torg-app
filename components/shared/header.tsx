@@ -143,7 +143,7 @@ export const Header: React.FC<Props> = ({ className }) => {
                 )}
             >
                 <Container className={cn(
-                    'relative flex w-full flex-wrap items-center justify-between px-4 transition-[gap,padding] duration-300 ease-out sm:px-6 lg:px-0',
+                    'relative flex w-full flex-wrap items-center justify-between px-4 transition-[gap,padding] duration-300 ease-out sm:px-6 lg:px-6 xl:px-8 2xl:px-10',
                     isCompact ? 'gap-x-2 gap-y-2 py-2 lg:flex-nowrap' : 'gap-x-3 gap-y-3 py-4 sm:gap-x-4 md:flex-nowrap lg:py-[var(--header-main-y)]',
                 )}>
                     <Link
@@ -240,7 +240,7 @@ export const Header: React.FC<Props> = ({ className }) => {
                     )}
                     aria-hidden={isCompact}
                 >
-                    <Container className="px-4 sm:px-6 lg:px-0">
+                    <Container className="px-4 sm:px-6 lg:px-6 xl:px-8 2xl:px-10">
                         <HeaderNav className={cn(isCompact && 'pointer-events-none')} />
                     </Container>
                 </div>

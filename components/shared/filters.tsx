@@ -8,8 +8,8 @@ import { RangeSlider } from './range-slider';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { CatalogTreeFilter } from './catalog-tree-filter';
 import { CatalogCategoryNode } from './category-folders-view';
-import { CatalogProduct } from './products-grid';
 import { cn } from '@/lib/utils';
+import { Skeleton } from '../ui/skeleton';
 
 
 interface Props {
@@ -19,7 +19,7 @@ interface Props {
     activeCategoryId?: number | null;
     activePathIds?: Set<number>;
     allProductsCount?: number;
-    getBranchProducts?: (category: CatalogCategoryNode) => CatalogProduct[];
+    isLoading?: boolean;
     onSelectAll?: () => void;
     onSelectCategory?: (categoryId: number) => void;
 }
@@ -49,7 +49,7 @@ export const Filters: React.FC<Props> = ({
     activeCategoryId = null,
     activePathIds = new Set<number>(),
     allProductsCount = 0,
-    getBranchProducts,
+    isLoading = false,
     onSelectAll,
     onSelectCategory,
 }) => {
@@ -124,14 +124,15 @@ export const Filters: React.FC<Props> = ({
                 <p className="text-[22px] font-extrabold leading-none">Каталог</p>
             </div>
 
-            {getBranchProducts && onSelectAll && onSelectCategory && (
+            {isLoading ? (
+                <CatalogFilterSkeleton />
+            ) : onSelectAll && onSelectCategory && (
                 <CatalogTreeFilter
                     className="mb-5"
                     roots={catalogRoots}
                     activeCategoryId={activeCategoryId}
                     activePathIds={activePathIds}
                     allProductsCount={allProductsCount}
-                    getBranchProducts={getBranchProducts}
                     onSelectAll={onSelectAll}
                     onSelectCategory={onSelectCategory}
                 />
@@ -183,3 +184,17 @@ export const Filters: React.FC<Props> = ({
         </div>
     )
 }
+
+export const CatalogFilterSkeleton = () => (
+    <div className="mb-5 flex flex-col gap-2 px-1">
+        {Array.from({ length: 6 }).map((_, index) => (
+            <div key={index} className="flex items-center gap-3 rounded-lg px-2 py-2">
+                <Skeleton className="size-10 shrink-0 rounded-lg" />
+                <div className="min-w-0 flex-1 space-y-2">
+                    <Skeleton className="h-4 w-3/4" />
+                    <Skeleton className="h-3 w-1/2" />
+                </div>
+            </div>
+        ))}
+    </div>
+)

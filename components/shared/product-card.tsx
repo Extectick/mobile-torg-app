@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { Minus, Plus } from 'lucide-react'
+import { Loader2, Minus, Plus } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
   formatNumber,
@@ -10,6 +10,7 @@ import {
   useProductPurchase,
 } from './use-product-purchase'
 import { useCart } from '@/store/cart'
+import { Skeleton } from '../ui/skeleton'
 
 interface Props {
   id: number
@@ -20,6 +21,7 @@ interface Props {
   description?: string | null
   packages?: ProductPackage[]
   onOpenProduct?: (id: number) => void
+  isOpening?: boolean
   className?: string
 }
 
@@ -32,8 +34,10 @@ export const ProductCard: React.FC<React.PropsWithChildren<Props>> = ({
   description,
   packages = [],
   onOpenProduct,
+  isOpening = false,
   className,
 }) => {
+  const [imageLoaded, setImageLoaded] = React.useState(false)
   const cartItems = useCart((state) => state.items)
   const setItemQuantity = useCart((state) => state.setItemQuantity)
   const getQuantityForPackage = React.useCallback((packageId: number) => (
@@ -78,20 +82,55 @@ export const ProductCard: React.FC<React.PropsWithChildren<Props>> = ({
     onQuantityChange: handleCartQuantityChange,
   })
 
-  const handleOpenProduct = () => onOpenProduct?.(id)
+  React.useEffect(() => {
+    setImageLoaded(false)
+  }, [imageUrl])
+
+  const handleOpenProduct = () => {
+    if (isOpening) {
+      return
+    }
+
+    onOpenProduct?.(id)
+  }
 
   return (
     <article
       className={cn(
-        'group flex h-full min-w-0 flex-col overflow-hidden rounded-xl border border-black/5 bg-white shadow-sm transition duration-300',
+        'group relative flex h-full min-w-0 flex-col overflow-hidden rounded-xl border border-black/5 bg-white shadow-sm transition duration-300',
         'hover:border-primary/25 hover:shadow-lg',
+        !imageLoaded && 'pointer-events-none',
         className,
       )}
     >
+      {!imageLoaded && (
+        <div className="absolute inset-0 z-20 bg-white">
+          <Skeleton className="[aspect-ratio:var(--product-card-image-ratio)] rounded-none" />
+          <div className="space-y-3 px-3 pb-4 pt-3 sm:px-4">
+            <Skeleton className="h-5 w-4/5" />
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-2/3" />
+            <div className="flex gap-2">
+              <Skeleton className="h-6 w-10" />
+              <Skeleton className="h-6 w-16" />
+            </div>
+            <div className="flex items-end justify-between gap-3 pt-2">
+              <Skeleton className="h-9 w-20" />
+              <Skeleton className="h-10 w-10 rounded-lg" />
+            </div>
+          </div>
+        </div>
+      )}
+      {isOpening && (
+        <div className="absolute inset-0 z-30 flex items-center justify-center bg-white/70 backdrop-blur-[1px]">
+          <Loader2 className="size-8 animate-spin text-primary" />
+        </div>
+      )}
       <button
         type="button"
         onClick={handleOpenProduct}
-        className="flex min-w-0 flex-1 flex-col text-left outline-none focus-visible:ring-2 focus-visible:ring-primary/35"
+        disabled={isOpening || !imageLoaded}
+        className="flex min-w-0 flex-1 flex-col text-left outline-none focus-visible:ring-2 focus-visible:ring-primary/35 disabled:cursor-wait"
       >
         <div className="relative z-10 flex [aspect-ratio:var(--product-card-image-ratio)] items-center justify-center overflow-hidden bg-gray-50 ring-1 ring-black/[0.03] transition duration-300 group-hover:shadow-md group-hover:ring-primary/20">
           <img
@@ -99,6 +138,8 @@ export const ProductCard: React.FC<React.PropsWithChildren<Props>> = ({
             src={imageUrl}
             alt={name}
             loading="lazy"
+            onLoad={() => setImageLoaded(true)}
+            onError={() => setImageLoaded(true)}
           />
         </div>
 
@@ -139,12 +180,12 @@ export const ProductCard: React.FC<React.PropsWithChildren<Props>> = ({
       </div>
 
       <div className="mt-auto flex flex-col gap-2 px-2.5 pb-3 pt-2 min-[430px]:px-3 sm:flex-row sm:items-end sm:justify-between sm:gap-2 sm:px-4 sm:pb-4 lg:pb-3">
-        <div className="min-w-0 pr-1">
+        <div className="min-w-[5rem] flex-1 pr-1">
           <span className="block truncate text-[10px] font-semibold uppercase leading-none text-gray-400 sm:text-xs">
             {getPackagePriceLabel(selectedPackage.name)}
           </span>
-          <span className="block truncate whitespace-nowrap text-lg font-extrabold leading-none text-black min-[430px]:text-xl sm:text-[clamp(1.2rem,2.7vw,1.45rem)]">
-            {packagePrice} ₽
+          <span className="block whitespace-nowrap text-lg font-extrabold leading-none text-black min-[430px]:text-xl sm:text-[clamp(1.2rem,2.7vw,1.45rem)]">
+            {formatNumber(packagePrice, 2)} ₽
           </span>
         </div>
 
@@ -158,7 +199,7 @@ export const ProductCard: React.FC<React.PropsWithChildren<Props>> = ({
             <Plus className="size-5" />
           </button>
         ) : (
-          <div className="flex h-9 w-full shrink-0 items-center overflow-hidden rounded-lg bg-primary text-white shadow-sm sm:h-10 sm:w-auto">
+          <div className="flex h-9 w-full shrink-0 items-center overflow-hidden rounded-lg bg-primary text-white shadow-sm sm:h-10 sm:w-[8.25rem]">
             <button
               type="button"
               onClick={decrement}

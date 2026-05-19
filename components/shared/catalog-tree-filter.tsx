@@ -4,14 +4,13 @@ import React from 'react'
 import { ChevronRight, Grid3X3 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { CatalogCategoryNode } from './category-folders-view'
-import { CatalogProduct } from './products-grid'
+import { Skeleton } from '../ui/skeleton'
 
 interface Props {
   roots: CatalogCategoryNode[]
   activeCategoryId: number | null
   activePathIds: Set<number>
   allProductsCount: number
-  getBranchProducts: (category: CatalogCategoryNode) => CatalogProduct[]
   onSelectAll: () => void
   onSelectCategory: (categoryId: number) => void
   className?: string
@@ -22,7 +21,6 @@ interface CategoryTreeItemProps {
   activeCategoryId: number | null
   activePathIds: Set<number>
   depth?: number
-  getBranchProducts: (category: CatalogCategoryNode) => CatalogProduct[]
   onSelectCategory: (categoryId: number) => void
 }
 
@@ -31,12 +29,11 @@ const CategoryTreeItem: React.FC<CategoryTreeItemProps> = ({
   activeCategoryId,
   activePathIds,
   depth = 0,
-  getBranchProducts,
   onSelectCategory,
 }) => {
+  const [imageLoaded, setImageLoaded] = React.useState(false)
   const active = category.id === activeCategoryId
   const expanded = activePathIds.has(category.id)
-  const productCount = getBranchProducts(category).length
 
   return (
     <div className={cn(depth > 0 && 'relative before:absolute before:left-5 before:top-0 before:h-full before:w-px before:bg-primary/10')}>
@@ -51,20 +48,23 @@ const CategoryTreeItem: React.FC<CategoryTreeItemProps> = ({
         style={{ paddingLeft: `${8 + depth * 18}px` }}
       >
         <span className={cn(
-          'flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-white ring-1 ring-black/5 transition duration-300',
+          'relative flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-white ring-1 ring-black/5 transition duration-300',
           'group-hover:scale-110 group-hover:ring-primary/20',
           active && 'bg-primary/10 ring-primary/25',
         )}>
+          {!imageLoaded && <Skeleton className="absolute inset-0 rounded-lg" />}
           <img
             src={category.image || '/window.svg'}
             alt=""
-            className="h-auto w-full object-contain"
+            className={cn('h-auto w-full object-contain', !imageLoaded && 'opacity-0')}
+            onLoad={() => setImageLoaded(true)}
+            onError={() => setImageLoaded(true)}
           />
         </span>
 
         <span className="min-w-0 flex-1">
           <span className="block truncate text-sm font-extrabold">{category.name}</span>
-          <span className="block text-xs text-gray-400">{productCount} товаров</span>
+          <span className="block text-xs text-gray-400">{category.productCount} товаров</span>
         </span>
 
         {category.children.length > 0 && (
@@ -86,7 +86,6 @@ const CategoryTreeItem: React.FC<CategoryTreeItemProps> = ({
               activeCategoryId={activeCategoryId}
               activePathIds={activePathIds}
               depth={depth + 1}
-              getBranchProducts={getBranchProducts}
               onSelectCategory={onSelectCategory}
             />
           ))}
@@ -101,7 +100,6 @@ export const CatalogTreeFilter: React.FC<Props> = ({
   activeCategoryId,
   activePathIds,
   allProductsCount,
-  getBranchProducts,
   onSelectAll,
   onSelectCategory,
   className,
@@ -136,7 +134,6 @@ export const CatalogTreeFilter: React.FC<Props> = ({
             category={category}
             activeCategoryId={activeCategoryId}
             activePathIds={activePathIds}
-            getBranchProducts={getBranchProducts}
             onSelectCategory={onSelectCategory}
           />
         ))}

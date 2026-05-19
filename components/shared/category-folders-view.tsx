@@ -4,13 +4,14 @@ import React from 'react'
 import { ChevronRight, Grid3X3 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ProductsGrid, CatalogProduct } from './products-grid'
+import { Skeleton } from '../ui/skeleton'
 
 export interface CatalogCategoryNode {
   id: number
   name: string
   image: string | null
   parentId: number | null
-  products: CatalogProduct[]
+  productCount: number
   children: CatalogCategoryNode[]
 }
 
@@ -18,6 +19,11 @@ interface Props {
   activeCategory: CatalogCategoryNode | null
   breadcrumbs: CatalogCategoryNode[]
   products: CatalogProduct[]
+  isInitialLoading?: boolean
+  isLoadingMore?: boolean
+  hasMore?: boolean
+  loadingProductId?: number | null
+  loadMoreRef?: (node?: Element | null) => void
   searchQuery?: string
   onSelectAll: () => void
   onSelectCategory: (categoryId: number) => void
@@ -28,10 +34,17 @@ export const CategoryFoldersView: React.FC<Props> = ({
   activeCategory,
   breadcrumbs,
   products,
+  isInitialLoading = false,
+  isLoadingMore = false,
+  hasMore = false,
+  loadingProductId = null,
+  loadMoreRef,
   onSelectAll,
   onSelectCategory,
   onOpenProduct,
 }) => {
+  const showEmptyState = !isInitialLoading && products.length === 0
+
   return (
     <section className="min-w-0">
       <div className="mb-4">
@@ -66,13 +79,49 @@ export const CategoryFoldersView: React.FC<Props> = ({
         </div>
       </div>
 
-      {products.length > 0 ? (
-        <ProductsGrid items={products} onOpenProduct={onOpenProduct} />
-      ) : (
+      {isInitialLoading ? (
+        <ProductGridSkeleton />
+      ) : products.length > 0 ? (
+        <>
+          <ProductsGrid
+            items={products}
+            onOpenProduct={onOpenProduct}
+            loadingProductId={loadingProductId}
+          />
+          {(isLoadingMore || hasMore) && (
+            <div ref={loadMoreRef} className="mt-5">
+              {isLoadingMore && <ProductGridSkeleton count={4} />}
+            </div>
+          )}
+        </>
+      ) : showEmptyState ? (
         <div className="rounded-lg border border-dashed border-black/10 bg-white/60 p-8 text-center text-gray-500">
           Ничего не найдено
         </div>
-      )}
+      ) : null}
     </section>
   )
 }
+
+export const ProductGridSkeleton: React.FC<{ count?: number }> = ({ count = 8 }) => (
+  <div className="grid grid-cols-2 gap-3 min-[430px]:gap-4 sm:gap-5 md:grid-cols-[repeat(auto-fill,minmax(min(100%,var(--card-min-width)),1fr))] lg:gap-[var(--card-gap)]">
+    {Array.from({ length: count }).map((_, index) => (
+      <div key={index} className="overflow-hidden rounded-xl border border-black/5 bg-white shadow-sm">
+        <Skeleton className="[aspect-ratio:var(--product-card-image-ratio)] rounded-none" />
+        <div className="space-y-3 px-3 pb-4 pt-3 sm:px-4">
+          <Skeleton className="h-5 w-4/5" />
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-2/3" />
+          <div className="flex gap-2">
+            <Skeleton className="h-6 w-10" />
+            <Skeleton className="h-6 w-16" />
+          </div>
+          <div className="flex items-end justify-between gap-3 pt-2">
+            <Skeleton className="h-9 w-20" />
+            <Skeleton className="h-10 w-10 rounded-lg" />
+          </div>
+        </div>
+      </div>
+    ))}
+  </div>
+)
