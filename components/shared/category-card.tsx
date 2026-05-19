@@ -32,7 +32,7 @@ export const CategoryCard: React.FC<Props> = ({
         className,
       )}
     >
-      <div className="flex aspect-[16/10] items-center justify-center overflow-hidden bg-secondary transition duration-300 group-hover:bg-secondary/80">
+      <div className="flex aspect-16/10 items-center justify-center overflow-hidden bg-secondary transition duration-300 group-hover:bg-secondary/80">
         <img
           src={image || '/window.svg'}
           alt={name}

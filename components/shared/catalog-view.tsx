@@ -7,10 +7,9 @@ import { Filters } from './filters'
 import { CatalogProduct } from './products-grid'
 import { CategoryFoldersView, CatalogCategoryNode } from './category-folders-view'
 import { ProductDetailsDialog } from './product-details-dialog'
-import { SearchInput } from './search-input'
-import { Button } from '../ui'
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from '../ui/drawer'
-import { SlidersHorizontal } from 'lucide-react'
+import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle } from '../ui/drawer'
+import { FolderOpen } from 'lucide-react'
+import { useOverlayHistory } from '@/hooks/use-overlay-history'
 
 interface CatalogCategory {
   id: number
@@ -30,6 +29,16 @@ interface CatalogResponse {
 }
 
 const PAGE_SIZE = 12
+
+class ProductLoadError extends Error {
+  constructor(
+    message: string,
+    readonly status: number,
+  ) {
+    super(message)
+    this.name = 'ProductLoadError'
+  }
+}
 
 function buildCategoryTree(categories: CatalogCategory[]): CatalogCategoryNode[] {
   const nodes = new Map<number, CatalogCategoryNode>()
@@ -84,6 +93,16 @@ function readPriceParam(value: string | null) {
   return Number.isFinite(numberValue) ? numberValue : undefined
 }
 
+function readIdParam(value: string | null) {
+  if (!value) {
+    return null
+  }
+
+  const numberValue = Number(value)
+
+  return Number.isInteger(numberValue) && numberValue > 0 ? numberValue : null
+}
+
 export const CatalogView: React.FC = () => {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -95,19 +114,19 @@ export const CatalogView: React.FC = () => {
   const [allProductsCount, setAllProductsCount] = React.useState(0)
   const [nextOffset, setNextOffset] = React.useState(0)
   const [hasMore, setHasMore] = React.useState(false)
-  const [isInitialLoading, setIsInitialLoading] = React.useState(true)
+  const [isCatalogBootstrapping, setIsCatalogBootstrapping] = React.useState(true)
+  const [isProductsLoading, setIsProductsLoading] = React.useState(false)
   const [isLoadingMore, setIsLoadingMore] = React.useState(false)
   const [loadingProductId, setLoadingProductId] = React.useState<number | null>(null)
   const [activeProduct, setActiveProduct] = React.useState<CatalogProduct | null>(null)
+  const hasLoadedCatalogRef = React.useRef(false)
   const roots = React.useMemo(() => buildCategoryTree(categories), [categories])
   const allCategories = React.useMemo(() => flattenCategories(roots), [roots])
   const [mobileFiltersOpen, setMobileFiltersOpen] = React.useState(false)
   const searchQuery = (searchParams.get('query') || '').trim()
   const categoryParam = searchParams.get('category')
   const [activeCategoryId, setActiveCategoryId] = React.useState<number | null>(() => {
-    const categoryId = Number(categoryParam)
-
-    return Number.isInteger(categoryId) ? categoryId : null
+    return readIdParam(categoryParam)
   })
   const productParam = searchParams.get('product')
   const priceFrom = readPriceParam(searchParams.get('priceFrom'))
@@ -138,7 +157,7 @@ export const CatalogView: React.FC = () => {
   }, [activeCategoryId, priceFrom, priceTo, searchQuery])
 
   React.useEffect(() => {
-    if (isInitialLoading) {
+    if (isCatalogBootstrapping) {
       return
     }
 
@@ -147,10 +166,10 @@ export const CatalogView: React.FC = () => {
     if (!activeExists) {
       setActiveCategoryId(null)
     }
-  }, [activeCategoryId, allCategories, isInitialLoading])
+  }, [activeCategoryId, allCategories, isCatalogBootstrapping])
 
   React.useEffect(() => {
-    if (isInitialLoading) {
+    if (isCatalogBootstrapping) {
       return
     }
 
@@ -163,11 +182,11 @@ export const CatalogView: React.FC = () => {
       return
     }
 
-    const categoryId = Number(categoryParam)
-    const categoryExists = Number.isInteger(categoryId) && allCategories.some((category) => category.id === categoryId)
+    const categoryId = readIdParam(categoryParam)
+    const categoryExists = categoryId !== null && allCategories.some((category) => category.id === categoryId)
 
     setActiveCategoryId(categoryExists ? categoryId : null)
-  }, [allCategories, categoryParam, isInitialLoading, searchQuery])
+  }, [allCategories, categoryParam, isCatalogBootstrapping, searchQuery])
 
   const effectiveActiveCategoryId = searchQuery ? null : activeCategoryId
   const activePath = React.useMemo(
@@ -203,8 +222,11 @@ export const CatalogView: React.FC = () => {
     const controller = new AbortController()
 
     const loadInitialCatalog = async () => {
+      const isFirstLoad = !hasLoadedCatalogRef.current
+
       try {
-        setIsInitialLoading(true)
+        setIsCatalogBootstrapping(isFirstLoad)
+        setIsProductsLoading(!isFirstLoad)
         setIsLoadingMore(false)
 
         const response = await fetch(`/api/catalog?${catalogRequestKey}`, {
@@ -222,18 +244,22 @@ export const CatalogView: React.FC = () => {
         setAllProductsCount(data.allProductsCount)
         setNextOffset(data.nextOffset)
         setHasMore(data.hasMore)
+        hasLoadedCatalogRef.current = true
       } catch (error) {
         if (!controller.signal.aborted) {
           console.error(error)
-          setCategories([])
+          if (!hasLoadedCatalogRef.current) {
+            setCategories([])
+            setAllProductsCount(0)
+          }
           setProducts([])
-          setAllProductsCount(0)
           setNextOffset(0)
           setHasMore(false)
         }
       } finally {
         if (!controller.signal.aborted) {
-          setIsInitialLoading(false)
+          setIsCatalogBootstrapping(false)
+          setIsProductsLoading(false)
         }
       }
     }
@@ -244,7 +270,7 @@ export const CatalogView: React.FC = () => {
   }, [catalogRequestKey])
 
   React.useEffect(() => {
-    if (!inView || !hasMore || isInitialLoading || isLoadingMore) {
+    if (!inView || !hasMore || isCatalogBootstrapping || isProductsLoading || isLoadingMore) {
       return
     }
 
@@ -270,7 +296,7 @@ export const CatalogView: React.FC = () => {
     return () => {
       cancelled = true
     }
-  }, [hasMore, inView, isInitialLoading, isLoadingMore, loadCatalogPage, nextOffset])
+  }, [hasMore, inView, isCatalogBootstrapping, isLoadingMore, isProductsLoading, loadCatalogPage, nextOffset])
 
   const loadProduct = React.useCallback(async (productId: number) => {
     setLoadingProductId(productId)
@@ -279,7 +305,8 @@ export const CatalogView: React.FC = () => {
       const response = await fetch(`/api/products/${productId}`)
 
       if (!response.ok) {
-        throw new Error('Failed to load product')
+        const errorBody = await response.json().catch(() => null) as { error?: string } | null
+        throw new ProductLoadError(errorBody?.error || 'Failed to load product', response.status)
       }
 
       const product = await response.json() as CatalogProduct
@@ -290,10 +317,18 @@ export const CatalogView: React.FC = () => {
     }
   }, [])
 
-  React.useEffect(() => {
-    const productId = Number(productParam)
+  const handleCloseProduct = React.useCallback(() => {
+    const params = new URLSearchParams(searchParams.toString())
+    params.delete('product')
 
-    if (!Number.isInteger(productId)) {
+    const query = params.toString()
+    router.replace(query ? `/?${query}` : '/', { scroll: false })
+  }, [router, searchParams])
+
+  React.useEffect(() => {
+    const productId = readIdParam(productParam)
+
+    if (productId === null) {
       setActiveProduct(null)
       return
     }
@@ -302,11 +337,16 @@ export const CatalogView: React.FC = () => {
       return
     }
 
-    loadProduct(productId).catch((error) => {
+    loadProduct(productId).catch((error: unknown) => {
+      if (error instanceof ProductLoadError && error.status === 404) {
+        handleCloseProduct()
+        return
+      }
+
       console.error(error)
       setActiveProduct(null)
     })
-  }, [activeProduct?.id, loadProduct, productParam])
+  }, [activeProduct?.id, handleCloseProduct, loadProduct, productParam])
 
   const handleSelectAll = React.useCallback(() => {
     setActiveCategoryId(null)
@@ -319,93 +359,95 @@ export const CatalogView: React.FC = () => {
   }, [router])
 
   const handleMobileSelectAll = React.useCallback(() => {
-    handleSelectAll()
+    setActiveCategoryId(null)
     setMobileFiltersOpen(false)
-  }, [handleSelectAll])
+    window.setTimeout(() => {
+      router.replace('/')
+    }, 0)
+  }, [router])
 
   const handleMobileSelectCategory = React.useCallback((categoryId: number) => {
-    handleSelectCategory(categoryId)
+    setActiveCategoryId(categoryId)
     setMobileFiltersOpen(false)
-  }, [handleSelectCategory])
+    window.setTimeout(() => {
+      router.replace(`/?category=${categoryId}`)
+    }, 0)
+  }, [router])
+
+  useOverlayHistory({
+    open: mobileFiltersOpen,
+    stateKey: 'mobile-filters',
+    onClose: () => setMobileFiltersOpen(false),
+  })
+
+  React.useEffect(() => {
+    const handleOpenMobileFilters = () => {
+      setMobileFiltersOpen(true)
+    }
+
+    window.addEventListener('mobile-catalog-filters-open', handleOpenMobileFilters)
+
+    return () => window.removeEventListener('mobile-catalog-filters-open', handleOpenMobileFilters)
+  }, [])
 
   const handleOpenProduct = React.useCallback((productId: number) => {
     const params = new URLSearchParams(searchParams.toString())
     params.set('product', String(productId))
 
-    loadProduct(productId)
-      .then(() => {
-        router.push(`/?${params.toString()}`, { scroll: false })
-      })
-      .catch((error) => {
-        console.error(error)
-      })
-  }, [loadProduct, router, searchParams])
-
-  const handleCloseProduct = React.useCallback(() => {
-    const params = new URLSearchParams(searchParams.toString())
-    params.delete('product')
-
-    const query = params.toString()
-    router.replace(query ? `/?${query}` : '/', { scroll: false })
+    router.push(`/?${params.toString()}`, { scroll: false })
   }, [router, searchParams])
 
   return (
     <>
-      <div className="flex flex-col gap-8 lg:flex-row lg:gap-[var(--catalog-gap)]">
-        <aside className="hidden lg:block lg:w-[var(--sidebar-width)] lg:shrink-0 lg:self-start lg:pr-1 [@media_(min-width:1024px)_and_(min-height:850px)]:sticky [@media_(min-width:1024px)_and_(min-height:850px)]:top-[calc(var(--app-header-height,80px)+16px)]">
+      <div className="flex flex-col gap-8 lg:flex-row lg:gap-(--catalog-gap)">
+        <aside className="hidden lg:block lg:w-(--sidebar-width) lg:shrink-0 lg:self-start lg:pr-1 [@media_(min-width:1024px)_and_(min-height:850px)]:sticky [@media_(min-width:1024px)_and_(min-height:850px)]:top-[calc(var(--app-header-height,80px)+16px)]">
           <Filters
             catalogRoots={roots}
             activeCategoryId={effectiveActiveCategoryId}
             activePathIds={activePathIds}
             allProductsCount={allProductsCount}
-            isLoading={isInitialLoading}
+            isLoading={isCatalogBootstrapping}
             onSelectAll={handleSelectAll}
             onSelectCategory={handleSelectCategory}
           />
         </aside>
 
-        <section className="min-w-0 flex-1 pb-44 lg:pb-0">
-          <div className="fixed inset-x-0 bottom-[calc(env(safe-area-inset-bottom)+6.7rem)] z-40 flex gap-2 px-3 sm:px-6 lg:hidden">
-            <React.Suspense fallback={<div className="h-11 flex-1 rounded-2xl bg-gray-100" />}>
-              <SearchInput className="h-11" variant="floating" resultsPlacement="top" />
-            </React.Suspense>
-
-            <Drawer open={mobileFiltersOpen} onOpenChange={setMobileFiltersOpen}>
-              <DrawerTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="size-11 shrink-0 rounded-2xl border-white/70 bg-white/85 text-gray-700 opacity-95 shadow-lg shadow-black/10 backdrop-blur transition hover:bg-white focus-visible:ring-primary/30"
-                  aria-label="Открыть фильтры"
-                >
-                  <SlidersHorizontal className="size-5" />
-                </Button>
-              </DrawerTrigger>
-              <DrawerContent className="max-h-[85dvh] overflow-hidden rounded-t-xl bg-white">
-                <DrawerHeader className="border-b border-black/5 px-4 pb-3 pt-4">
-                  <DrawerTitle className="text-lg font-extrabold">Каталог и фильтры</DrawerTitle>
-                </DrawerHeader>
-                <div className="overflow-y-auto">
-                  <Filters
-                    surface="plain"
-                    catalogRoots={roots}
-                    activeCategoryId={effectiveActiveCategoryId}
-                    activePathIds={activePathIds}
-                    allProductsCount={allProductsCount}
-                    isLoading={isInitialLoading}
-                    onSelectAll={handleMobileSelectAll}
-                    onSelectCategory={handleMobileSelectCategory}
-                  />
-                </div>
-              </DrawerContent>
-            </Drawer>
-          </div>
+        <section className="min-w-0 flex-1 pb-28 lg:pb-0">
+          <Drawer open={mobileFiltersOpen} onOpenChange={setMobileFiltersOpen}>
+            <DrawerContent className="max-h-[85dvh] overflow-hidden rounded-t-xl bg-white">
+              <DrawerHeader className="border-b border-black/5 px-4 pb-3 pt-4">
+                <DrawerTitle className="flex items-center gap-2 text-[22px] font-extrabold">
+                  <span className="flex size-9 items-center justify-center rounded-lg bg-primary/10 text-primary ring-1 ring-primary/15">
+                    <FolderOpen className="size-5" />
+                  </span>
+                  Каталог
+                </DrawerTitle>
+                <DrawerDescription className="sr-only">
+                  Выберите категорию или настройте фильтры каталога
+                </DrawerDescription>
+              </DrawerHeader>
+              <div className="overflow-y-auto">
+                <Filters
+                  surface="plain"
+                  catalogRoots={roots}
+                  activeCategoryId={effectiveActiveCategoryId}
+                  activePathIds={activePathIds}
+                  allProductsCount={allProductsCount}
+                  isLoading={isCatalogBootstrapping}
+                  onSelectAll={handleMobileSelectAll}
+                  onSelectCategory={handleMobileSelectCategory}
+                  showTitle={false}
+                />
+              </div>
+            </DrawerContent>
+          </Drawer>
 
           <CategoryFoldersView
             activeCategory={activeCategory}
             breadcrumbs={activePath}
             products={products}
-            isInitialLoading={isInitialLoading}
+            isInitialLoading={isCatalogBootstrapping}
+            isProductsLoading={isProductsLoading}
             isLoadingMore={isLoadingMore}
             hasMore={hasMore}
             loadingProductId={loadingProductId}

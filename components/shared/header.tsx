@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils'
 import { Container } from './container'
 import React, { Suspense } from 'react'
 import { Button } from '../ui'
-import { ShoppingCart, User } from 'lucide-react'
+import { ShoppingCart, SlidersHorizontal, User } from 'lucide-react'
 import { SearchInput } from './search-input'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -32,7 +32,7 @@ const HeaderNav: React.FC<HeaderNavProps> = ({ compact = false, className, ...pr
         <nav className={cn('min-w-0', className)} {...props}>
             <div className={cn(
                 'flex gap-2 overflow-x-auto',
-                compact ? 'py-1' : 'py-[var(--header-nav-y)]',
+                compact ? 'py-1' : 'py-1.5',
             )}>
                 {navItems.map((item) => {
                     const active = item.href === '/' ? pathname === '/' : pathname.startsWith(item.href)
@@ -58,14 +58,21 @@ const HeaderNav: React.FC<HeaderNavProps> = ({ compact = false, className, ...pr
 }
 
 export const Header: React.FC<Props> = ({ className }) => {
+    const pathname = usePathname()
     const [isCompact, setIsCompact] = React.useState(false)
     const [searchFocused, setSearchFocused] = React.useState(false)
     const [headerHeight, setHeaderHeight] = React.useState(0)
     const headerRef = React.useRef<HTMLElement | null>(null)
+    const headerHeightFrameRef = React.useRef<number | null>(null)
     const cartItems = useCart((state) => state.items)
     const cartHydrated = useCart((state) => state.hydrated)
     const { totalAmount } = React.useMemo(() => getCartTotals(cartItems), [cartItems])
     const cartAmountLabel = cartHydrated ? totalAmount : 0
+    const showMobileCatalogSearch = pathname === '/'
+
+    const handleOpenMobileFilters = React.useCallback(() => {
+        window.dispatchEvent(new CustomEvent('mobile-catalog-filters-open'))
+    }, [])
 
     React.useEffect(() => {
         let ticking = false
@@ -117,15 +124,30 @@ export const Header: React.FC<Props> = ({ className }) => {
             setHeaderHeight((currentHeight) => Math.max(currentHeight, nextHeight))
         }
 
+        const scheduleHeaderHeightUpdate = () => {
+            if (headerHeightFrameRef.current !== null) {
+                return
+            }
+
+            headerHeightFrameRef.current = requestAnimationFrame(() => {
+                headerHeightFrameRef.current = null
+                updateHeaderHeight()
+            })
+        }
+
         updateHeaderHeight()
 
-        const resizeObserver = new ResizeObserver(updateHeaderHeight)
+        const resizeObserver = new ResizeObserver(scheduleHeaderHeightUpdate)
         resizeObserver.observe(headerElement)
-        window.addEventListener('resize', updateHeaderHeight)
+        window.addEventListener('resize', scheduleHeaderHeightUpdate)
 
         return () => {
+            if (headerHeightFrameRef.current !== null) {
+                cancelAnimationFrame(headerHeightFrameRef.current)
+                headerHeightFrameRef.current = null
+            }
             resizeObserver.disconnect()
-            window.removeEventListener('resize', updateHeaderHeight)
+            window.removeEventListener('resize', scheduleHeaderHeightUpdate)
             document.documentElement.style.removeProperty('--app-header-height')
         }
     }, [])
@@ -134,17 +156,17 @@ export const Header: React.FC<Props> = ({ className }) => {
         <>
             <header
                 ref={headerRef}
-                className={cn(
-                    'fixed inset-x-0 top-0 z-50 border-b bg-white/95 transition-[background-color,box-shadow,backdrop-filter] duration-300 ease-out',
-                    searchFocused && 'z-[80]',
-                    isCompact ? 'shadow-lg shadow-black/5 backdrop-blur' : 'shadow-none',
+                    className={cn(
+                        'fixed inset-x-0 top-0 z-50 border-b bg-white/95 transition-[background-color,box-shadow] duration-200 ease-out',
+                        searchFocused && 'z-80',
+                        isCompact ? 'shadow-lg shadow-black/5' : 'shadow-none',
                     searchFocused && 'border-transparent',
                     className,
                 )}
             >
                 <Container className={cn(
                     'relative flex w-full flex-wrap items-center justify-between px-4 transition-[gap,padding] duration-300 ease-out sm:px-6 lg:px-6 xl:px-8 2xl:px-10',
-                    isCompact ? 'gap-x-2 gap-y-2 py-2 lg:flex-nowrap' : 'gap-x-3 gap-y-3 py-4 sm:gap-x-4 md:flex-nowrap lg:py-[var(--header-main-y)]',
+                    isCompact ? 'gap-x-2 gap-y-2 py-2 lg:flex-nowrap' : 'gap-x-3 gap-y-3 py-2.5 sm:gap-x-4 md:flex-nowrap lg:py-(--header-main-y)',
                 )}>
                     <Link
                         href="/"
@@ -160,7 +182,7 @@ export const Header: React.FC<Props> = ({ className }) => {
                             height={50}
                             className={cn(
                                 'shrink-0 transition-transform duration-300 ease-out group-hover:scale-110',
-                                isCompact ? 'size-9' : 'size-14 sm:size-[58px]',
+                                isCompact ? 'size-9' : 'size-14 sm:size-14.5',
                             )}
                         />
                         <div className="min-w-0">
@@ -191,11 +213,11 @@ export const Header: React.FC<Props> = ({ className }) => {
 
                     <HeaderNav compact className={cn(
                         'order-4 w-full overflow-hidden transition-[max-height,max-width,opacity] duration-300 ease-out lg:order-0 lg:w-auto lg:flex-none',
-                        isCompact ? 'pointer-events-none max-h-0 opacity-0 lg:pointer-events-auto lg:max-h-12 lg:max-w-[min(34vw,28rem)] lg:opacity-100 2xl:max-w-[32rem]' : 'pointer-events-none max-h-0 opacity-0 lg:max-w-0',
+                        isCompact ? 'pointer-events-none max-h-0 opacity-0 lg:pointer-events-auto lg:max-h-12 lg:max-w-[min(34vw,28rem)] lg:opacity-100 2xl:max-w-lg' : 'pointer-events-none max-h-0 opacity-0 lg:max-w-0',
                     )} aria-hidden={!isCompact} />
 
                     <div className={cn(
-                        'relative z-[60] order-3 hidden w-full flex-none transition-[margin] duration-300 ease-out lg:order-0 lg:block lg:flex-1',
+                        'relative z-60 order-3 hidden w-full flex-none transition-[margin] duration-300 ease-out lg:order-0 lg:block lg:flex-1',
                         isCompact ? 'lg:mx-3 xl:mx-5 2xl:mx-8' : 'md:mx-6 xl:mx-8 2xl:mx-12',
                     )}>
                         <Suspense fallback={<div className={cn('rounded-2xl bg-gray-100', isCompact ? 'h-10 lg:h-11' : 'h-11')} />}>
@@ -243,6 +265,50 @@ export const Header: React.FC<Props> = ({ className }) => {
                     <Container className="px-4 sm:px-6 lg:px-6 xl:px-8 2xl:px-10">
                         <HeaderNav className={cn(isCompact && 'pointer-events-none')} />
                     </Container>
+                </div>
+
+                <div
+                    className={cn(
+                        'inset-x-0 z-50 overflow-visible will-change-[opacity,transform] transition-[opacity,transform] duration-200 ease-out lg:hidden',
+                        isCompact ? 'pointer-events-none absolute top-full' : 'relative border-t border-black/5 bg-white/95',
+                        showMobileCatalogSearch
+                            ? cn('opacity-100', isCompact ? 'translate-y-2' : 'translate-y-0')
+                            : cn('opacity-0', isCompact ? '-translate-y-2' : '-translate-y-1'),
+                    )}
+                    aria-hidden={!showMobileCatalogSearch}
+                >
+                    {showMobileCatalogSearch && (
+                        <Container className={cn(
+                            'pointer-events-auto flex gap-2 px-3 sm:px-6',
+                            isCompact ? '' : 'py-2',
+                        )}>
+                            <Suspense fallback={<div className="h-11 flex-1 rounded-2xl bg-gray-100" />}>
+                                <SearchInput
+                                    className="h-11"
+                                    variant={isCompact ? 'floating' : 'default'}
+                                    mobileFullscreen
+                                    onFocusChange={setSearchFocused}
+                                    onFilterClick={handleOpenMobileFilters}
+                                />
+                            </Suspense>
+
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="icon"
+                                className={cn(
+                                    'size-11 shrink-0 rounded-2xl text-gray-700 transition focus-visible:ring-primary/30',
+                                    isCompact
+                                        ? 'border-white/70 bg-white/85 opacity-95 shadow-lg shadow-black/10 hover:bg-white'
+                                        : 'border-gray-200 bg-white shadow-sm hover:bg-secondary',
+                                )}
+                                aria-label="Открыть фильтры"
+                                onClick={handleOpenMobileFilters}
+                            >
+                                <SlidersHorizontal className="size-5" />
+                            </Button>
+                        </Container>
+                    )}
                 </div>
             </header>
             <div aria-hidden style={{ height: headerHeight || undefined }} />

@@ -86,10 +86,10 @@ export const CheckboxCategoryFiltersGroup: React.FC<Props> = (
 
                     {...Array(limit)
                         .fill(0)
-                        .map((_, index) => <Skeleton key={index} className='bg-gray-200 h-6 mb-3 rounded-[6px]'/>)
+                        .map((_, index) => <Skeleton key={index} className='mb-3 h-6 rounded-md bg-gray-200'/>)
                     }
 
-                    <Skeleton className='w-29 bg-gray-200 h-6 mb-3 rounded-[6px]'/>
+                    <Skeleton className='mb-3 h-6 w-29 rounded-md bg-gray-200'/>
             </div>
             </div>
         )

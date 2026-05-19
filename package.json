@@ -3,7 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
+    "predev": "node scripts/kill-dev-port.mjs",
+    "dev": "node scripts/dev-server.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
@@ -32,7 +33,7 @@
     "clsx": "^2.1.1",
     "dotenv": "^17.4.2",
     "lucide-react": "^0.511.0",
-    "next": "^15.5.18",
+    "next": "^16.3.0-canary.23",
     "qs": "^6.15.1",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",

@@ -34,7 +34,7 @@ interface Props {
 
 export const ProductsGrid: React.FC<Props> = ({ items, onOpenProduct, loadingProductId = null, className }) => {
   return (
-    <div className={cn('grid grid-cols-2 gap-3 min-[430px]:gap-4 sm:gap-5 md:grid-cols-[repeat(auto-fill,minmax(min(100%,var(--card-min-width)),1fr))] lg:gap-[var(--card-gap)]', className)}>
+    <div className={cn('grid grid-cols-2 gap-3 min-[430px]:gap-4 sm:gap-5 md:grid-cols-[repeat(auto-fill,minmax(min(100%,var(--card-min-width)),1fr))] lg:gap-(--card-gap)', className)}>
       {items.map((product) => (
         <ProductCard
           key={product.id}

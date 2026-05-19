@@ -22,6 +22,7 @@ interface Props {
     isLoading?: boolean;
     onSelectAll?: () => void;
     onSelectCategory?: (categoryId: number) => void;
+    showTitle?: boolean;
 }
 
 interface PriceProps {
@@ -52,6 +53,7 @@ export const Filters: React.FC<Props> = ({
     isLoading = false,
     onSelectAll,
     onSelectCategory,
+    showTitle = true,
 }) => {
     const router = useRouter()
     const searchParams = useSearchParams()
@@ -117,12 +119,14 @@ export const Filters: React.FC<Props> = ({
             surface === 'plain' && 'bg-white px-4 pb-[calc(env(safe-area-inset-bottom)+1rem)] pt-2',
             className,
         )}>
-            <div className="mb-4 flex items-center gap-2">
-                <span className="flex size-8 items-center justify-center rounded-lg bg-primary/10 text-primary ring-1 ring-primary/15">
-                    <FolderOpen className="size-5" />
-                </span>
-                <p className="text-[22px] font-extrabold leading-none">Каталог</p>
-            </div>
+            {showTitle && (
+                <div className="mb-4 flex items-center gap-2">
+                    <span className="flex size-8 items-center justify-center rounded-lg bg-primary/10 text-primary ring-1 ring-primary/15">
+                        <FolderOpen className="size-5" />
+                    </span>
+                    <p className="text-[22px] font-extrabold leading-none">Каталог</p>
+                </div>
+            )}
 
             {isLoading ? (
                 <CatalogFilterSkeleton />
@@ -140,8 +144,8 @@ export const Filters: React.FC<Props> = ({
 
             {/* {Верхний чекбокс} */}
             <div className='border-t border-black/5 pt-4 flex flex-col gap-2'>
-                <FilterCheckbox text="Доставим завтра" value="2312fsdf13321" className="rounded-md px-1 py-2 hover:bg-black/[0.025]"/>
-                <FilterCheckbox text="Новинки" value="fdsfsd" className="rounded-md px-1 py-2 hover:bg-black/[0.025]"/>
+                <FilterCheckbox text="Доставим завтра" value="2312fsdf13321" className="rounded-md px-1 py-2 hover:bg-black/2.5"/>
+                <FilterCheckbox text="Новинки" value="fdsfsd" className="rounded-md px-1 py-2 hover:bg-black/2.5"/>
             </div>
 
             {/* {Фильтр цен} */}

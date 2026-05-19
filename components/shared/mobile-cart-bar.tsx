@@ -17,6 +17,7 @@ export const MobileCartBar: React.FC = () => {
   const { totalAmount, totalCount } = React.useMemo(() => getCartTotals(cartItems), [cartItems])
   const remainingAmount = Math.max(MINIMUM_ORDER_AMOUNT - totalAmount, 0)
   const progress = Math.min((totalAmount / MINIMUM_ORDER_AMOUNT) * 100, 100)
+  const showCartBar = cartHydrated && totalAmount > 0 && !searchFocused
 
   React.useEffect(() => {
     const handleSearchFocusChange = (event: Event) => {
@@ -29,13 +30,29 @@ export const MobileCartBar: React.FC = () => {
     return () => window.removeEventListener('mobile-search-focus-change', handleSearchFocusChange)
   }, [])
 
-  if (!cartHydrated || totalAmount <= 0 || searchFocused) {
+  React.useEffect(() => {
+    if (showCartBar) {
+      document.documentElement.style.setProperty(
+        '--mobile-floating-search-bottom',
+        'calc(env(safe-area-inset-bottom) + 6.7rem)',
+      )
+      return
+    }
+
+    document.documentElement.style.removeProperty('--mobile-floating-search-bottom')
+
+    return () => {
+      document.documentElement.style.removeProperty('--mobile-floating-search-bottom')
+    }
+  }, [showCartBar])
+
+  if (!showCartBar) {
     return null
   }
 
   return (
     <div className="fixed inset-x-0 bottom-0 z-40 px-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] lg:hidden">
-      <div className="mx-auto max-w-[32rem] rounded-2xl border border-primary/20 bg-white/95 p-3 shadow-[0_18px_50px_rgba(0,0,0,0.18)] backdrop-blur">
+      <div className="mx-auto max-w-lg rounded-2xl border border-primary/20 bg-white/95 p-3 shadow-[0_18px_50px_rgba(0,0,0,0.18)] backdrop-blur">
         <div className="flex items-center gap-3">
           <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/20">
             <ShoppingCart className="size-5" />

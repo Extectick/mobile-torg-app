@@ -1,11 +1,12 @@
 'use client'
 
 import { cn } from '@/lib/utils'
-import { FolderOpen, Search, X } from 'lucide-react'
+import { ArrowLeft, FolderOpen, Search, SlidersHorizontal, X } from 'lucide-react'
 import React, { useRef, useCallback, useState, useEffect, useMemo } from 'react'
 import { createPortal } from 'react-dom'
 import { useClickAway, useDebounce } from 'ahooks'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { Button } from '../ui'
 import { Api } from '@/services/api-client'
 import { SearchCategory, SearchProduct, SearchResponse } from '@/services/search'
 
@@ -15,6 +16,8 @@ interface Props {
   onFocusChange?: (focused: boolean) => void
   variant?: 'default' | 'floating'
   resultsPlacement?: 'bottom' | 'top'
+  mobileFullscreen?: boolean
+  onFilterClick?: () => void
 }
 
 type SuggestionItem =
@@ -33,6 +36,8 @@ export const SearchInput: React.FC<Props> = ({
   onFocusChange,
   variant = 'default',
   resultsPlacement = 'bottom',
+  mobileFullscreen = false,
+  onFilterClick,
 }) => {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -42,12 +47,19 @@ export const SearchInput: React.FC<Props> = ({
   const [isLoading, setIsLoading] = useState(false)
   const [results, setResults] = useState<SearchResponse>(emptyResults)
   const [activeIndex, setActiveIndex] = useState(-1)
-  const containerRef = useRef<HTMLDivElement>(null)
+  const containerRef = useRef<HTMLFormElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+  const modalInputRef = useRef<HTMLInputElement>(null)
   const resultsRef = useRef<HTMLDivElement>(null)
+  const modalRef = useRef<HTMLDivElement>(null)
+  const [fullscreenOpen, setFullscreenOpen] = useState(false)
   const [showOverlay, setShowOverlay] = useState(false)
   const [mounted, setMounted] = useState(false)
   const clickedItemRef = useRef(false)
+  const keyboardOpenRef = useRef(false)
+  const suppressFullscreenOpenUntilRef = useRef(0)
+  const fullscreenHistoryActiveRef = useRef(false)
+  const modalOpen = mobileFullscreen && fullscreenOpen
 
   const debouncedQuery = useDebounce(searchQuery, { wait: 300 })
   const suggestionItems = useMemo<SuggestionItem[]>(() => [
@@ -63,53 +75,118 @@ export const SearchInput: React.FC<Props> = ({
   const closeSearch = useCallback(() => {
     if (!clickedItemRef.current) {
       setFocused(false)
+      setFullscreenOpen(false)
       setResults(emptyResults)
       setActiveIndex(-1)
     }
     clickedItemRef.current = false
   }, [])
 
-  const clearSearch = useCallback(() => {
+  const closeFullscreenHistoryEntry = useCallback((action: 'back' | 'release' | 'none') => {
+    if (!fullscreenHistoryActiveRef.current || typeof window === 'undefined') {
+      return
+    }
+
+    fullscreenHistoryActiveRef.current = false
+
+    if (action === 'back') {
+      window.history.back()
+      return
+    }
+
+    if (action === 'release') {
+      const currentState = window.history.state
+
+      if (currentState && typeof currentState === 'object' && currentState.__mobileSearchFullscreen) {
+        const nextState = { ...currentState }
+        delete nextState.__mobileSearchFullscreen
+        window.history.replaceState(nextState, '', window.location.href)
+      }
+    }
+  }, [])
+
+  const closeFullscreenSearch = useCallback((options?: { history?: 'back' | 'release' | 'none' }) => {
+    suppressFullscreenOpenUntilRef.current = Date.now() + 450
+    clickedItemRef.current = false
+    setFocused(false)
+    setFullscreenOpen(false)
+    setResults(emptyResults)
+    setActiveIndex(-1)
+    inputRef.current?.blur()
+    modalInputRef.current?.blur()
+    closeFullscreenHistoryEntry(options?.history ?? 'release')
+  }, [closeFullscreenHistoryEntry])
+
+  const clearSearch = useCallback((options?: { keepClosed?: boolean }) => {
     clickedItemRef.current = false
     setSearchQuery('')
     setResults(emptyResults)
     setActiveIndex(-1)
-    setFocused(false)
 
     if (urlQuery) {
-      router.push('/')
+      closeFullscreenHistoryEntry('release')
+      router.replace('/')
+      closeFullscreenSearch({ history: 'none' })
+      return
     }
-  }, [router, urlQuery])
 
-  useClickAway(closeSearch, containerRef)
+    if (options?.keepClosed) {
+      setFocused(false)
+      setFullscreenOpen(false)
+      return
+    }
+
+    if (modalOpen) {
+      closeFullscreenSearch({ history: 'back' })
+    } else if (!mobileFullscreen) {
+      setFocused(false)
+    } else {
+      setFocused(true)
+      setFullscreenOpen(true)
+    }
+  }, [closeFullscreenHistoryEntry, closeFullscreenSearch, mobileFullscreen, modalOpen, router, urlQuery])
+
+  useClickAway(() => {
+    if (mobileFullscreen) {
+      return
+    }
+
+    closeSearch()
+  }, containerRef)
+
+  const runAfterFullscreenClose = useCallback((callback: () => void) => {
+    closeFullscreenHistoryEntry('release')
+    callback()
+    closeFullscreenSearch({ history: 'none' })
+  }, [closeFullscreenHistoryEntry, closeFullscreenSearch])
 
   const handleSearch = useCallback(() => {
     const trimmedQuery = searchQuery.trim()
 
     if (trimmedQuery) {
-      router.push(`/?query=${encodeURIComponent(trimmedQuery)}`)
-      closeSearch()
-      inputRef.current?.blur()
+      runAfterFullscreenClose(() => {
+        router.push(`/?query=${encodeURIComponent(trimmedQuery)}`)
+      })
     }
-  }, [searchQuery, router, closeSearch])
+  }, [router, runAfterFullscreenClose, searchQuery])
 
   const handleCategorySelect = useCallback((categoryId: number) => {
     clickedItemRef.current = true
     setSearchQuery('')
-    router.push(`/?category=${categoryId}`)
-    closeSearch()
-    inputRef.current?.blur()
-  }, [router, closeSearch])
+    runAfterFullscreenClose(() => {
+      router.push(`/?category=${categoryId}`)
+    })
+  }, [router, runAfterFullscreenClose])
 
   const handleProductSelect = useCallback((productId: number) => {
     clickedItemRef.current = true
     const params = new URLSearchParams(searchParams.toString())
     params.set('product', String(productId))
 
-    router.push(`/?${params.toString()}`, { scroll: false })
-    closeSearch()
-    inputRef.current?.blur()
-  }, [router, searchParams, closeSearch])
+    runAfterFullscreenClose(() => {
+      router.push(`/?${params.toString()}`, { scroll: false })
+    })
+  }, [router, runAfterFullscreenClose, searchParams])
 
   const activateItem = useCallback((item: SuggestionItem) => {
     if (item.type === 'category') {
@@ -128,7 +205,11 @@ export const SearchInput: React.FC<Props> = ({
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     switch (e.key) {
       case 'Escape':
-        closeSearch()
+        if (modalOpen) {
+          closeFullscreenSearch()
+        } else {
+          closeSearch()
+        }
         break
       case 'Enter':
         e.preventDefault()
@@ -147,13 +228,14 @@ export const SearchInput: React.FC<Props> = ({
         setActiveIndex((prev) => Math.max(prev - 1, -1))
         break
     }
-  }, [activateItem, activeIndex, closeSearch, handleSearch, suggestionItems])
+  }, [activateItem, activeIndex, closeFullscreenSearch, closeSearch, handleSearch, modalOpen, suggestionItems])
 
   useEffect(() => {
     const controller = new AbortController()
+    const searchIsActive = focused || modalOpen
 
     const fetchSuggestions = async () => {
-      if (!focused) {
+      if (!searchIsActive) {
         return
       }
 
@@ -188,15 +270,15 @@ export const SearchInput: React.FC<Props> = ({
     return () => {
       controller.abort()
     }
-  }, [debouncedQuery, focused])
+  }, [debouncedQuery, focused, modalOpen])
 
   useEffect(() => {
     setMounted(true)
   }, [])
 
   useEffect(() => {
-    onFocusChange?.(focused)
-  }, [focused, onFocusChange])
+    onFocusChange?.(focused || modalOpen)
+  }, [focused, modalOpen, onFocusChange])
 
   useEffect(() => {
     if (variant !== 'floating') {
@@ -204,7 +286,7 @@ export const SearchInput: React.FC<Props> = ({
     }
 
     window.dispatchEvent(new CustomEvent('mobile-search-focus-change', {
-      detail: { focused },
+      detail: { focused: focused || modalOpen },
     }))
 
     return () => {
@@ -212,7 +294,7 @@ export const SearchInput: React.FC<Props> = ({
         detail: { focused: false },
       }))
     }
-  }, [focused, variant])
+  }, [focused, modalOpen, variant])
 
   useEffect(() => {
     if (focused) {
@@ -222,6 +304,103 @@ export const SearchInput: React.FC<Props> = ({
       return () => clearTimeout(timer)
     }
   }, [focused])
+
+  useEffect(() => {
+    if (!modalOpen) {
+      return
+    }
+
+    const timer = window.setTimeout(() => {
+      modalInputRef.current?.focus()
+    }, 80)
+
+    return () => window.clearTimeout(timer)
+  }, [modalOpen])
+
+  useEffect(() => {
+    if (!modalOpen || typeof document === 'undefined') {
+      return
+    }
+
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+
+    return () => {
+      document.body.style.overflow = previousOverflow
+    }
+  }, [modalOpen])
+
+  useEffect(() => {
+    if (!mobileFullscreen || !modalOpen || typeof window === 'undefined') {
+      return
+    }
+
+    if (fullscreenHistoryActiveRef.current) {
+      return
+    }
+
+    fullscreenHistoryActiveRef.current = true
+    const currentState = window.history.state
+    const nextState = {
+      ...(currentState && typeof currentState === 'object' ? currentState : {}),
+      __mobileSearchFullscreen: true,
+    }
+
+    window.history.pushState(nextState, '', window.location.href)
+  }, [mobileFullscreen, modalOpen])
+
+  useEffect(() => {
+    if (!mobileFullscreen || typeof window === 'undefined') {
+      return
+    }
+
+    const handlePopState = () => {
+      if (!fullscreenHistoryActiveRef.current) {
+        return
+      }
+
+      fullscreenHistoryActiveRef.current = false
+      closeFullscreenSearch({ history: 'none' })
+    }
+
+    window.addEventListener('popstate', handlePopState)
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState)
+    }
+  }, [closeFullscreenSearch, mobileFullscreen])
+
+  useEffect(() => {
+    if (mobileFullscreen || variant !== 'floating' || !focused || typeof window === 'undefined' || !window.visualViewport) {
+      return
+    }
+
+    const viewport = window.visualViewport
+    const initialHeight = viewport.height
+    keyboardOpenRef.current = false
+
+    const handleViewportResize = () => {
+      const heightDiff = initialHeight - viewport.height
+
+      if (heightDiff > 120) {
+        keyboardOpenRef.current = true
+        return
+      }
+
+      if (keyboardOpenRef.current) {
+        keyboardOpenRef.current = false
+        closeSearch()
+        inputRef.current?.blur()
+        modalInputRef.current?.blur()
+      }
+    }
+
+    viewport.addEventListener('resize', handleViewportResize)
+
+    return () => {
+      viewport.removeEventListener('resize', handleViewportResize)
+    }
+  }, [closeSearch, focused, mobileFullscreen, variant])
 
   useEffect(() => {
     if (activeIndex >= 0 && resultsRef.current) {
@@ -239,11 +418,34 @@ export const SearchInput: React.FC<Props> = ({
   const overlay = showOverlay ? (
     <div
       className={cn(
-        //'fixed inset-0 z-[60] bg-black/50 transition-opacity duration-200',
+        //'fixed inset-0 z-60 bg-black/50 transition-opacity duration-200',
         focused ? 'opacity-100' : 'opacity-0',
       )}
     />
   ) : null
+
+  const handleFullscreenFilterClick = useCallback(() => {
+    closeFullscreenSearch()
+    window.setTimeout(() => {
+      onFilterClick?.()
+    }, 120)
+  }, [closeFullscreenSearch, onFilterClick])
+
+  const openFullscreenSearch = useCallback((event?: React.MouseEvent<HTMLElement>) => {
+    if (!mobileFullscreen) {
+      return
+    }
+
+    if (Date.now() < suppressFullscreenOpenUntilRef.current) {
+      return
+    }
+
+    event?.preventDefault()
+    event?.stopPropagation()
+    clickedItemRef.current = false
+    setFocused(false)
+    setFullscreenOpen(true)
+  }, [mobileFullscreen])
 
   const resultsList = useMemo(() => {
     if (isLoading) {
@@ -384,18 +586,167 @@ export const SearchInput: React.FC<Props> = ({
     return <ul>{content}</ul>
   }, [activeIndex, handleCategorySelect, handleProductSelect, handleSearch, isLoading, results, searchQuery])
 
+  const fullscreenModal = modalOpen ? (
+    <div
+      ref={modalRef}
+      className="fixed inset-0 z-[100] flex flex-col overflow-y-auto bg-white lg:hidden [contain:layout_paint]"
+    >
+      <div className="sticky top-0 z-10 transform-gpu animate-in fade-in slide-in-from-top-2 duration-200 border-b border-black/5 bg-white/95 px-3 pb-3 pt-[calc(env(safe-area-inset-top)+0.75rem)] shadow-sm">
+        <form
+          role="search"
+          action="/"
+          autoComplete="off"
+          onSubmit={(event) => {
+            event.preventDefault()
+            handleSearch()
+          }}
+          className="flex items-center gap-2"
+        >
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            className="size-11 shrink-0 rounded-2xl border-gray-100 bg-white text-gray-700 shadow-md shadow-black/10 transition hover:bg-white"
+            aria-label="Назад"
+            onClick={() => closeFullscreenSearch({ history: 'back' })}
+          >
+            <ArrowLeft className="size-5" />
+          </Button>
+
+          <div className="relative h-11 min-w-0 flex-1 rounded-2xl bg-white shadow-[0_0_0_3px_rgba(154,196,44,0.16),0_12px_30px_rgba(0,0,0,0.08)]">
+            <Search className="absolute left-3 top-1/2 h-5 -translate-y-1/2 text-gray-400" />
+            <input
+              ref={modalInputRef}
+              className="h-full w-full rounded-2xl border border-primary/20 bg-white pl-11 pr-11 text-base outline-none transition focus:border-primary/50 focus:ring-2 focus:ring-primary/20 [&::-webkit-search-cancel-button]:hidden [&::-webkit-search-decoration]:hidden [&::-webkit-search-results-button]:hidden [&::-webkit-search-results-decoration]:hidden"
+              type="search"
+              name="mobile-product-query"
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="none"
+              spellCheck={false}
+              inputMode="search"
+              enterKeyHint="search"
+              placeholder="Найти продукт..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={handleKeyDown}
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onPointerDown={(event) => {
+                  event.preventDefault()
+                  event.stopPropagation()
+                }}
+                onClick={(event) => {
+                  event.stopPropagation()
+                  clearSearch()
+                }}
+                className="absolute right-1.5 top-1/2 flex -translate-y-1/2 cursor-pointer items-center justify-center rounded-full bg-gray-200 p-2 text-gray-600 transition hover:bg-gray-300"
+                aria-label="Очистить поиск"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            className="size-11 shrink-0 rounded-2xl border-gray-100 bg-white text-gray-700 shadow-md shadow-black/10 transition hover:bg-white"
+            aria-label="Открыть фильтры"
+            onClick={handleFullscreenFilterClick}
+          >
+            <SlidersHorizontal className="size-5" />
+          </Button>
+        </form>
+      </div>
+
+      <div ref={resultsRef} className="min-h-0 flex-1 bg-white">
+        {searchQuery ? (
+          <div className="w-full transform-gpu animate-in fade-in slide-in-from-bottom-1 duration-150">
+            {resultsList}
+          </div>
+        ) : (
+          <div className="flex h-full min-h-[18rem] flex-col items-center justify-start px-8 pt-16 text-center text-gray-400">
+            <Search className="mb-4 size-10 text-primary/40" />
+            <p className="text-base font-bold text-gray-500">Начните вводить название товара</p>
+          </div>
+        )}
+      </div>
+    </div>
+  ) : null
+
   return (
     <div className="relative w-full">
       {mounted && overlay ? createPortal(overlay, document.body) : null}
+      {mounted && fullscreenModal ? createPortal(fullscreenModal, document.body) : null}
 
-      <div
+      {mobileFullscreen ? (
+        <div
+          role="search"
+          onClick={openFullscreenSearch}
+          className={cn(
+            'relative z-90 flex h-11 flex-1 justify-between rounded-2xl transition-[background-color,box-shadow,opacity] duration-200',
+            variant === 'floating' && (
+              focused
+                ? 'bg-white opacity-100 shadow-[0_0_0_3px_rgba(154,196,44,0.20),0_12px_36px_rgba(154,196,44,0.22)]'
+                : 'bg-white/85 opacity-95 shadow-lg shadow-black/10'
+            ),
+            className,
+          )}
+        >
+          <Search className="absolute left-3 top-1/2 h-5 -translate-y-1/2 text-gray-400" />
+          <button
+            type="button"
+            onClick={openFullscreenSearch}
+            className={cn(
+              'h-full w-full rounded-2xl border pl-11 pr-20 text-left outline-none transition-all duration-200',
+              variant === 'floating'
+                ? 'border-white/70 bg-white/85 text-gray-700 placeholder:text-gray-500 focus:border-primary/50 focus:bg-white focus:ring-2 focus:ring-primary/25'
+                : 'border-gray-200 bg-gray-100 text-gray-700 shadow-sm focus:border-primary/50 focus:ring-2 focus:ring-primary/20',
+              !searchQuery && 'text-gray-400',
+            )}
+          >
+            <span className="block truncate">{searchQuery || 'Найти продукт...'}</span>
+          </button>
+          {searchQuery && (
+            <button
+              type="button"
+              onPointerDown={(event) => {
+                event.preventDefault()
+                event.stopPropagation()
+              }}
+              onClick={(event) => {
+                event.stopPropagation()
+                clearSearch({ keepClosed: true })
+              }}
+              className="absolute right-2 top-1/2 flex -translate-y-1/2 cursor-pointer items-center justify-center overflow-hidden rounded-full bg-gray-200 p-2 text-sm font-medium text-gray-600 shadow-sm transition-all duration-300 after:absolute after:inset-0 after:bg-white/10 after:opacity-0 after:transition-opacity after:duration-300 hover:bg-gray-300 hover:text-gray-700 hover:after:opacity-100 active:scale-95 active:shadow-none"
+              aria-label="Очистить поиск"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
+        </div>
+      ) : (
+      <>
+      <form
         ref={containerRef}
+        role="search"
+        action="/"
+        autoComplete="off"
+        onClick={openFullscreenSearch}
+        onSubmit={(event) => {
+          event.preventDefault()
+          handleSearch()
+        }}
         className={cn(
-          'relative z-[90] flex h-11 flex-1 justify-between rounded-2xl transition-[background-color,box-shadow,opacity] duration-200',
+          'relative z-90 flex h-11 flex-1 justify-between rounded-2xl transition-[background-color,box-shadow,opacity] duration-200',
           variant === 'floating' && (
             focused
               ? 'bg-white opacity-100 shadow-[0_0_0_3px_rgba(154,196,44,0.20),0_12px_36px_rgba(154,196,44,0.22)]'
-              : 'bg-white/85 opacity-95 shadow-lg shadow-black/10 backdrop-blur'
+              : 'bg-white/85 opacity-95 shadow-lg shadow-black/10'
           ),
           className,
         )}
@@ -405,19 +756,34 @@ export const SearchInput: React.FC<Props> = ({
           ref={inputRef}
           className={cn(
             'w-full rounded-2xl border pl-11 pr-20 outline-none transition-all duration-200',
+            '[&::-webkit-search-cancel-button]:hidden [&::-webkit-search-decoration]:hidden [&::-webkit-search-results-button]:hidden [&::-webkit-search-results-decoration]:hidden',
             variant === 'floating'
               ? 'border-white/70 bg-white/85 placeholder:text-gray-500 focus:border-primary/50 focus:bg-white focus:ring-2 focus:ring-primary/25'
               : 'border-gray-200 bg-gray-100 shadow-sm focus:border-primary/50 focus:ring-2 focus:ring-primary/20',
           )}
-          type="text"
+          type="search"
+          name="product-query"
+          autoComplete="off"
+          autoCorrect="off"
+          autoCapitalize="none"
+          spellCheck={false}
+          inputMode="search"
+          enterKeyHint="search"
           placeholder="Найти продукт..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           onFocus={() => {
             clickedItemRef.current = false
             setFocused(true)
+            if (mobileFullscreen) {
+              setFullscreenOpen(true)
+            }
           }}
           onBlur={() => {
+            if (mobileFullscreen) {
+              return
+            }
+
             if (!clickedItemRef.current) {
               setTimeout(closeSearch, 100)
             }
@@ -426,25 +792,35 @@ export const SearchInput: React.FC<Props> = ({
         />
         {searchQuery && (
           <button
-            onClick={clearSearch}
+            type="button"
+            onPointerDown={(event) => {
+              event.preventDefault()
+              event.stopPropagation()
+            }}
+            onClick={(event) => {
+              event.stopPropagation()
+              clearSearch()
+            }}
             className="absolute right-2 top-1/2 flex -translate-y-1/2 cursor-pointer items-center justify-center overflow-hidden rounded-full bg-gray-200 p-2 text-sm font-medium text-gray-600 shadow-sm transition-all duration-300 after:absolute after:inset-0 after:bg-white/10 after:opacity-0 after:transition-opacity after:duration-300 hover:bg-gray-300 hover:text-gray-700 hover:after:opacity-100 active:scale-95 active:shadow-none"
             aria-label="Очистить поиск"
           >
             <X className="h-4 w-4" />
           </button>
         )}
-      </div>
+      </form>
 
-      {focused && searchQuery && (
+      {focused && searchQuery && !modalOpen && (
         <div
           ref={resultsRef}
           className={cn(
-            'absolute left-0 right-0 z-[90] max-h-[min(24rem,calc(100dvh-var(--app-header-height,80px)-1rem))] overflow-y-auto rounded-lg border border-gray-100 bg-white shadow-xl',
+            'absolute left-0 right-0 z-90 max-h-[min(24rem,calc(100dvh-var(--app-header-height,80px)-1rem))] overflow-y-auto rounded-lg border border-gray-100 bg-white shadow-xl',
             resultsPlacement === 'top' ? 'bottom-full mb-2' : 'top-full mt-2',
           )}
         >
           {resultsList}
         </div>
+      )}
+      </>
       )}
     </div>
   )

@@ -1,7 +1,7 @@
 import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
 
-export function middleware(req: NextRequest) {
+export function proxy(req: NextRequest) {
   if (process.env.LOG_HTTP_REQUESTS !== 'false') {
     const url = req.nextUrl
     const search = url.search || ''

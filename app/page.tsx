@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic'
 
 export default async function Home() {
   return (
-    <Container className="mt-8 scroll-smooth px-4 pb-14 sm:px-6 lg:mt-[var(--page-catalog-top)] lg:px-6 xl:px-8 2xl:px-10">
+    <Container className="mt-3 scroll-smooth px-4 pb-14 sm:mt-4 sm:px-6 lg:mt-(--page-catalog-top) lg:px-6 xl:px-8 2xl:px-10">
       <Suspense fallback={null}>
         <CatalogView />
       </Suspense>

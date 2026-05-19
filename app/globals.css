@@ -52,6 +52,7 @@
 
 html {
   scroll-behavior: smooth;
+  overscroll-behavior-x: none;
 }
 
 @media screen and (prefers-reduced-motion: reduce) {
@@ -244,6 +245,7 @@ html {
   }
   body {
     @apply bg-background text-foreground;
+    overscroll-behavior-x: none;
     background: #F8F8F8;
     /* background: #E8F5E9; */
     /* background: #FFFFFF; */
