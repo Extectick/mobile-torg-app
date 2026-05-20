@@ -91,6 +91,7 @@ html {
   --content-max-width: 1280px;
   --catalog-gap: 1.5rem;
   --sidebar-width: 280px;
+  --desktop-cart-width: 300px;
   --card-min-width: 230px;
   --card-gap: 1.25rem;
   --header-main-y: 1.5rem;
@@ -135,6 +136,7 @@ html {
     --content-max-width: 1280px;
     --catalog-gap: 1.5rem;
     --sidebar-width: 280px;
+    --desktop-cart-width: 300px;
     --card-min-width: 230px;
     --card-gap: 1.25rem;
     --header-main-y: 1.35rem;
@@ -148,6 +150,7 @@ html {
     --content-max-width: 1280px;
     --catalog-gap: 1.5rem;
     --sidebar-width: 280px;
+    --desktop-cart-width: 300px;
     --card-min-width: 225px;
     --card-gap: 1.25rem;
     --header-main-y: 1.25rem;
@@ -160,6 +163,7 @@ html {
     --content-max-width: 1360px;
     --catalog-gap: 1.75rem;
     --sidebar-width: 292px;
+    --desktop-cart-width: 320px;
     --card-min-width: 220px;
   }
 }
@@ -169,6 +173,7 @@ html {
     --content-max-width: 1480px;
     --catalog-gap: 2rem;
     --sidebar-width: 300px;
+    --desktop-cart-width: 330px;
     --card-min-width: 215px;
     --card-gap: 1.35rem;
   }
@@ -179,6 +184,7 @@ html {
     --content-max-width: 1600px;
     --catalog-gap: 2.25rem;
     --sidebar-width: 320px;
+    --desktop-cart-width: 340px;
     --card-min-width: 208px;
     --card-gap: 1.5rem;
     --header-main-y: 1.25rem;
@@ -191,6 +197,7 @@ html {
     --content-max-width: 1720px;
     --catalog-gap: 2.5rem;
     --sidebar-width: 320px;
+    --desktop-cart-width: 360px;
     --card-min-width: 205px;
   }
 }

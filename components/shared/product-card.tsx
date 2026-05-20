@@ -49,6 +49,8 @@ export const ProductCard: React.FC<React.PropsWithChildren<Props>> = ({
     setItemQuantity({
       productId: id,
       packageId: itemPackage.id,
+      name,
+      imageUrl,
       unit: itemPackage.unit,
       packageName: itemPackage.name,
       packageQuantity: itemPackage.quantity,
@@ -57,7 +59,7 @@ export const ProductCard: React.FC<React.PropsWithChildren<Props>> = ({
       quantityStep: itemPackage.quantityStep,
       quantityPrecision: itemPackage.quantityPrecision,
     }, nextQuantity)
-  }, [id, price, setItemQuantity])
+  }, [id, imageUrl, name, price, setItemQuantity])
   const {
     availablePackages,
     selectedPackage,

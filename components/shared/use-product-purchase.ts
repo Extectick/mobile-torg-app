@@ -142,6 +142,10 @@ export function useProductPurchase({
   const handlePackageSelect = React.useCallback((packageId: number) => {
     const nextPackage = availablePackages.find((item) => item.id === packageId)
 
+    if (packageId === selectedPackageId) {
+      return
+    }
+
     setSelectedPackageId(packageId)
 
     if (!nextPackage || quantity <= 0) {
@@ -155,12 +159,13 @@ export function useProductPurchase({
     const nextQuantity = Number((nextMinQuantity + stepsFromMin * nextStep).toFixed(nextPrecision))
 
     if (isControlled) {
+      onQuantityChange?.(0, selectedPackage)
       onQuantityChange?.(nextQuantity, nextPackage)
     } else {
       setUncontrolledQuantity(nextQuantity)
     }
     setQuantityInput(formatNumber(nextQuantity, nextPrecision))
-  }, [availablePackages, isControlled, onQuantityChange, quantity])
+  }, [availablePackages, isControlled, onQuantityChange, quantity, selectedPackage, selectedPackageId])
 
   const handleQuantityInputChange = React.useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const value = event.target.value.replace(',', '.')

@@ -8,6 +8,8 @@ export const GUEST_CART_STORAGE_KEY = 'mobile-torg-cart'
 export interface CartItem {
   productId: number
   packageId: number
+  name?: string
+  imageUrl?: string
   quantity: number
   unit: string
   packageName: string
@@ -29,6 +31,7 @@ interface CartState {
   mergePrompt: MergePrompt | null
   setHydrated: () => void
   addItem: (item: CartItem) => void
+  updateItemMeta: (productId: number, meta: Pick<CartItem, 'name' | 'imageUrl'>) => void
   updateQuantity: (productId: number, packageId: number, quantity: number) => void
   setItemQuantity: (item: Omit<CartItem, 'quantity'>, quantity: number) => void
   removeItem: (productId: number, packageId: number) => void
@@ -80,6 +83,20 @@ export const useCart = create<CartState>()(
       addItem: (item) => {
         set((state) => ({
           items: mergeItems(state.items, item),
+        }))
+      },
+
+      updateItemMeta: (productId, meta) => {
+        set((state) => ({
+          items: state.items.map((item) => (
+            item.productId === productId
+              ? {
+                  ...item,
+                  name: item.name || meta.name,
+                  imageUrl: item.imageUrl || meta.imageUrl,
+                }
+              : item
+          )),
         }))
       },
 
@@ -167,4 +184,3 @@ export const getCartTotals = (items: CartItem[]) => ({
   totalAmount: Number(items.reduce((sum, item) => sum + item.price * item.quantity, 0).toFixed(2)),
   totalCount: Number(items.reduce((sum, item) => sum + item.quantity, 0).toFixed(3)),
 })
-

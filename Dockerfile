@@ -10,7 +10,19 @@ RUN apt-get update \
 FROM base AS deps
 
 COPY package.json package-lock.json ./
-RUN npm ci
+RUN --mount=type=cache,target=/root/.npm \
+  npm config set registry https://registry.npmjs.org/ \
+  && npm config set fetch-retries 5 \
+  && npm config set fetch-retry-factor 2 \
+  && npm config set fetch-retry-mintimeout 20000 \
+  && npm config set fetch-retry-maxtimeout 120000 \
+  && npm config set fetch-timeout 300000 \
+  && for attempt in 1 2 3; do \
+    npm ci --no-audit --no-fund --prefer-offline && break; \
+    if [ "$attempt" = "3" ]; then exit 1; fi; \
+    echo "npm ci failed, retrying in 10s..."; \
+    sleep 10; \
+  done
 
 FROM deps AS builder
 

@@ -3,7 +3,7 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   output: "standalone",
   allowedDevOrigins: [
-    '192.168.0.15', '192.168.1.149', '192.168.30.206', '37.233.82.200'
+    '192.168.0.15', '192.168.1.149', '192.168.30.206', '37.233.82.200', '192.168.1.76', '127.0.0.1'
   ],
   experimental: {
     turbopackFileSystemCacheForDev: false,

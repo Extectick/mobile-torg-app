@@ -7,6 +7,7 @@ import { Filters } from './filters'
 import { CatalogProduct } from './products-grid'
 import { CategoryFoldersView, CatalogCategoryNode } from './category-folders-view'
 import { ProductDetailsDialog } from './product-details-dialog'
+import { DesktopCartPanel } from './desktop-cart-panel'
 import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle } from '../ui/drawer'
 import { FolderOpen } from 'lucide-react'
 import { useOverlayHistory } from '@/hooks/use-overlay-history'
@@ -399,8 +400,8 @@ export const CatalogView: React.FC = () => {
 
   return (
     <>
-      <div className="flex flex-col gap-8 lg:flex-row lg:gap-(--catalog-gap)">
-        <aside className="hidden lg:block lg:w-(--sidebar-width) lg:shrink-0 lg:self-start lg:pr-1 [@media_(min-width:1024px)_and_(min-height:850px)]:sticky [@media_(min-width:1024px)_and_(min-height:850px)]:top-[calc(var(--app-header-height,80px)+16px)]">
+      <div className="flex flex-col gap-8 lg:grid lg:grid-cols-[var(--sidebar-width)_minmax(0,1fr)_var(--desktop-cart-width)] lg:items-start lg:gap-(--catalog-gap)">
+        <aside className="hidden lg:block lg:self-start lg:pr-1 [@media_(min-width:1024px)_and_(min-height:850px)]:sticky [@media_(min-width:1024px)_and_(min-height:850px)]:top-[calc(var(--app-header-height,80px)+16px)]">
           <Filters
             catalogRoots={roots}
             activeCategoryId={effectiveActiveCategoryId}
@@ -412,7 +413,7 @@ export const CatalogView: React.FC = () => {
           />
         </aside>
 
-        <section className="min-w-0 flex-1 pb-28 lg:pb-0">
+        <section className="min-w-0 pb-28 lg:pb-0">
           <Drawer open={mobileFiltersOpen} onOpenChange={setMobileFiltersOpen}>
             <DrawerContent className="max-h-[85dvh] overflow-hidden rounded-t-xl bg-white">
               <DrawerHeader className="border-b border-black/5 px-4 pb-3 pt-4">
@@ -458,6 +459,8 @@ export const CatalogView: React.FC = () => {
             onOpenProduct={handleOpenProduct}
           />
         </section>
+
+        <DesktopCartPanel />
       </div>
       <ProductDetailsDialog
         product={activeProduct}

@@ -74,6 +74,8 @@ export const ProductDetailsDialog: React.FC<Props> = ({ product, open, onOpenCha
     setItemQuantity({
       productId: displayedProduct.id,
       packageId: itemPackage.id,
+      name: displayedProduct.name,
+      imageUrl: displayedProduct.imagesJson,
       unit: itemPackage.unit,
       packageName: itemPackage.name,
       packageQuantity: itemPackage.quantity,

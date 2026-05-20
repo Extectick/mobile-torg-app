@@ -172,7 +172,7 @@ export const Header: React.FC<Props> = ({ className }) => {
                         href="/"
                         className={cn(
                             'group flex min-w-0 flex-1 cursor-pointer items-center transition-[gap] duration-300 ease-out sm:flex-none',
-                            isCompact ? 'gap-2' : 'gap-2.5 sm:gap-4',
+                            isCompact ? 'gap-1.5 sm:gap-2' : 'gap-2 sm:gap-2.5',
                         )}
                     >
                         <img
@@ -180,19 +180,19 @@ export const Header: React.FC<Props> = ({ className }) => {
                             alt="Logo"
                             width={50}
                             height={50}
-                            className={cn(
-                                'shrink-0 transition-transform duration-300 ease-out group-hover:scale-110',
-                                isCompact ? 'size-9' : 'size-14 sm:size-14.5',
+                                className={cn(
+                                    'shrink-0 transition-transform duration-300 ease-out group-hover:scale-110',
+                                isCompact ? 'size-9 lg:size-10' : 'size-12 sm:size-13 lg:size-14',
                             )}
                         />
-                        <div className="min-w-0">
+                        <div className="min-w-0 leading-none">
                             <h1
                                 style={{ color: '#9ac42c' }}
                                 className={cn(
                                     'whitespace-nowrap font-black uppercase leading-none transition-[font-size,color] duration-300 ease-out group-hover:text-[#7da324]',
                                     isCompact
-                                        ? 'text-[clamp(0.92rem,3.7vw,1.12rem)] sm:text-lg'
-                                        : 'text-[clamp(1.18rem,4.9vw,1.55rem)] sm:text-[1.65rem]',
+                                        ? 'text-[clamp(0.98rem,3.9vw,1.16rem)] sm:text-[1.2rem] lg:text-[1.28rem]'
+                                        : 'text-[clamp(1.24rem,5vw,1.62rem)] sm:text-[1.78rem]',
                                 )}
                             >
                                 Лидер Продукт
@@ -200,10 +200,10 @@ export const Header: React.FC<Props> = ({ className }) => {
                             <p
                                 style={{ color: '#EE960A' }}
                                 className={cn(
-                                    'mt-0.5 whitespace-nowrap leading-none transition-[font-size,color] duration-300 ease-out group-hover:text-[#d18209]',
+                                    'mt-1 whitespace-nowrap leading-none transition-[font-size,color] duration-300 ease-out group-hover:text-[#d18209]',
                                     isCompact
-                                        ? 'text-[clamp(0.68rem,2.6vw,0.82rem)] xl:text-xs'
-                                        : 'text-[clamp(0.84rem,3.45vw,1.05rem)] sm:text-base',
+                                        ? 'text-[clamp(0.68rem,2.6vw,0.82rem)] lg:text-[0.82rem]'
+                                        : 'text-[clamp(0.86rem,3.45vw,1.08rem)] sm:text-[1.02rem]',
                                 )}
                             >
                                 быстрая доставка продуктов
